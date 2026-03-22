@@ -1,0 +1,11 @@
+services:
+  db:
+    image: postgres:15
+    container_name: meu_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: faculdade_db
+    ports:
+      - "5434:5432"
