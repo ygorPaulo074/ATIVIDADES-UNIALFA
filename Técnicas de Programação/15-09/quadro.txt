@@ -1,0 +1,12 @@
+While -> Enquanto
+
+    O laço "while" em python é utilizado para se repetir um bloco de código enquanto determinada confição for verdadeira.
+   
+    i = 0
+    while i < 5:
+        print(i)
+
+        i   +=  1
+            |
+            incremento!
+

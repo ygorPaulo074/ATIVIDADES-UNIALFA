@@ -1,0 +1,6 @@
+Programação Orientada a Objetos
+    É um paradigma de programação que organiza o código em objetos, os quais integram dados e comportamentos de forma estruturada. 
+    Esse modelo facilita a reutilização, manutenção e escalabilidade dos sistemas, promovendo maior modularidade e flexibilidade. 
+    Utiliza conceitos fundamentais como classes, herança, encapsulamento e polimorfismo, permitindo que desenvolvedores criem soluções 
+    mais robustas, seguras e adaptáveis às mudanças de requisitos.
+
