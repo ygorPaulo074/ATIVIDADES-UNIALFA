@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Test — AI-ChatBot</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Header ─────────────────────────────────────────────── */
+    header {
+      display: flex; align-items: center; gap: 1rem;
+      padding: 0 1.5rem; height: 46px;
+      background: #0d0d0d; border-bottom: 1px solid #1e1e1e; flex-shrink: 0;
+    }
+    .logo { display: flex; align-items: center; gap: 0.5rem; }
+    .logo-dot { width: 8px; height: 8px; border-radius: 50%; background: #3b82f6; }
+    .logo-name { font-size: 0.82rem; font-weight: 600; color: #f0f0f0; }
+    .logo-sub  { font-size: 0.65rem; color: #333; }
+    .h-sep { width: 1px; height: 14px; background: #1e1e1e; }
+    #url-input {
+      background: #111; border: 1px solid #1e1e1e; border-radius: 3px;
+      color: #888; font-family: inherit; font-size: 0.68rem;
+      padding: 3px 9px; width: 190px; outline: none;
+    }
+    #url-input:focus { border-color: #3b82f6; color: #d0d0d0; }
+    .h-spacer { flex: 1; }
+    .status-badge {
+      display: inline-flex; align-items: center; gap: 0.35rem;
+      padding: 0.22rem 0.65rem; border-radius: 999px;
+      font-size: 0.58rem; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+    }
+    .status-badge.ok   { background: #0d2e1a; color: #34d399; border: 1px solid #065f46; }
+    .status-badge.err  { background: #2e0d0d; color: #f87171; border: 1px solid #7f1d1d; }
+    .status-badge.idle { background: #1a1a1a; color: #444;    border: 1px solid #222; }
+    .s-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+    .status-badge.ok  .s-dot { background: #34d399; box-shadow: 0 0 5px #34d39966; }
+    .status-badge.err .s-dot { background: #f87171; }
+    .status-badge.idle .s-dot { background: #444; }
+    #ver-tag {
+      font-size: 0.6rem; color: #333; background: #111;
+      border: 1px solid #1e1e1e; border-radius: 3px; padding: 2px 6px; display: none;
+    }
+    .toggle-json { font-size: 0.62rem; color: #333; cursor: pointer; text-decoration: underline; }
+    .toggle-json:hover { color: #666; }
+    .header-btn {
+      height: 24px; padding: 0 8px; font-size: 0.6rem;
+      color: #555; background: #111; border-color: #1e1e1e;
+    }
+
+    /* ── Layout ──────────────────────────────────────────────── */
+    #layout { display: grid; grid-template-columns: 260px 1fr; flex: 1; overflow: hidden; }
+
+    /* ── Sidebar ─────────────────────────────────────────────── */
+    #sidebar {
+      background: #0d0d0d; border-right: 1px solid #1e1e1e;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .sb-block { padding: 0.9rem 1rem; border-bottom: 1px solid #141414; flex-shrink: 0; }
+    .sb-block.grow { flex: 1; overflow-y: auto; }
+    .sb-lbl {
+      font-size: 0.55rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .12em; color: #333; margin-bottom: 0.6rem;
+    }
+    .field { display: flex; flex-direction: column; gap: 3px; margin-bottom: 7px; }
+    .field:last-child { margin-bottom: 0; }
+    .field-lbl { font-size: 0.6rem; color: #444; }
+    .row { display: flex; gap: 5px; }
+    .row input { flex: 1; }
+    input {
+      width: 100%; background: #111; border: 1px solid #1e1e1e; border-radius: 3px;
+      color: #c0c0c0; font-family: inherit; font-size: 0.68rem;
+      padding: 6px 8px; outline: none; transition: border-color .15s;
+    }
+    input:focus { border-color: #3b82f6; }
+    input[type=password] { letter-spacing: .05em; }
+    button {
+      background: #1a1a1a; border: 1px solid #252525; color: #555;
+      padding: 0.35rem 0.8rem; border-radius: 3px; cursor: pointer;
+      font-size: 0.68rem; font-family: inherit; transition: all .15s; white-space: nowrap;
+    }
+    button:hover:not(:disabled) { background: #202020; color: #999; border-color: #333; }
+    button:disabled { opacity: .35; cursor: not-allowed; }
+    .btn-ghost { background: transparent; border-color: #1a1a1a; color: #444; }
+    .btn-ghost:hover:not(:disabled) { color: #888; background: #111; }
+    .btn-full { width: 100%; }
+    .btn-blue { background: #0f1e33; border-color: #1a3a5c; color: #60a5fa; }
+    .btn-blue:hover:not(:disabled) { background: #142540; color: #93c5fd; }
+    .btn-icon {
+      background: #111; border: 1px solid #1e1e1e; color: #444;
+      padding: 5px 8px; border-radius: 3px; cursor: pointer;
+      font-size: 11px; font-family: inherit; flex-shrink: 0; transition: all .15s;
+    }
+    .btn-icon:hover { color: #888; border-color: #2a2a2a; }
+
+    /* Agent list */
+    #agent-list { display: flex; flex-direction: column; gap: 4px; }
+    .agent-item {
+      padding: 7px 9px; border-radius: 3px; cursor: pointer;
+      border: 1px solid #141414; transition: all .15s;
+    }
+    .agent-item:hover  { background: #111; border-color: #2a2a2a; }
+    .agent-item.active { background: #0f1e33; border-color: #1a3a5c; }
+    .ai-name  { font-size: 0.72rem; color: #d0d0d0; }
+    .ai-meta  { font-size: 0.6rem; color: #333; margin-top: 2px; }
+    .ai-meta.active { color: #3b82f6; }
+    .list-empty { font-size: 0.62rem; color: #333; padding: 4px 0; }
+    .list-empty strong { color: #666; font-weight: 600; }
+
+    /* Agent card */
+    #agent-card {
+      background: #111; border: 1px solid #1e1e1e; border-radius: 3px;
+      padding: 9px 10px; display: none; margin-top: 7px;
+    }
+    #agent-card.visible { display: block; }
+    .ac-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+    .ac-name { font-size: 0.75rem; font-weight: 600; color: #f0f0f0; line-height: 1.35; }
+    .ac-row {
+      display: flex; justify-content: space-between;
+      font-size: 0.6rem; padding: 3px 0; border-top: 1px solid #141414; color: #333;
+    }
+    .ac-val { color: #666; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .agent-kind {
+      font-size: 0.52rem; text-transform: uppercase; letter-spacing: .08em;
+      padding: 2px 6px; border-radius: 999px; flex-shrink: 0;
+      background: #0f1e33; border: 1px solid #1a3a5c; color: #60a5fa;
+    }
+    .agent-kind.persisted { background: #0d2e1a; border-color: #065f46; color: #34d399; }
+
+    /* Ephemeral box */
+    .eph-box { background: #0a0a0a; border: 1px dashed #1e1e1e; border-radius: 3px; padding: 10px; }
+    .eph-box p { font-size: 0.62rem; color: #333; line-height: 1.6; margin-bottom: 8px; }
+
+    /* Session info */
+    .session-id { font-size: 0.58rem; color: #2a2a2a; margin-top: 5px; word-break: break-all; }
+
+    /* ── Main ────────────────────────────────────────────────── */
+    #main-area { display: flex; flex-direction: column; overflow: hidden; }
+    #active-agent-bar {
+      display: none; align-items: center; gap: 10px;
+      min-height: 34px; padding: 0 1.25rem;
+      background: #0a0a0a; border-bottom: 1px solid #141414; flex-shrink: 0;
+    }
+    #active-agent-bar.visible { display: flex; }
+    .aa-name { color: #d0d0d0; font-size: 0.7rem; font-weight: 600; }
+    .aa-meta { color: #444; font-size: 0.6rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .aa-spacer { flex: 1; }
+
+    /* Tab bar */
+    #tab-bar {
+      display: flex; align-items: center;
+      padding: 0 1rem; height: 38px;
+      background: #0d0d0d; border-bottom: 1px solid #1e1e1e; flex-shrink: 0; gap: 2px;
+    }
+    .tab-btn {
+      padding: 0.3rem 0.8rem; border-radius: 3px; font-size: 0.68rem;
+      cursor: pointer; background: transparent; border: none;
+      color: #444; transition: all .15s; font-family: inherit;
+    }
+    .tab-btn:hover { color: #888; }
+    .tab-btn.active { background: #1a1a1a; color: #d0d0d0; border: 1px solid #252525; }
+    .tab-spacer { flex: 1; }
+    #top-session { font-size: 0.6rem; color: #2a2a2a; }
+
+    /* Panels */
+    .panel { display: none; flex: 1; overflow: hidden; flex-direction: column; }
+    .panel.active { display: flex; }
+
+    /* ── Chat panel ──────────────────────────────────────────── */
+    #messages {
+      flex: 1; overflow-y: auto; padding: 1.25rem;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    #empty-state {
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; gap: 8px; color: #222;
+    }
+    .empty-icon { font-size: 1.8rem; }
+    .empty-title { font-size: 0.78rem; color: #555; font-weight: 600; }
+    .empty-steps { display: flex; flex-direction: column; gap: 5px; margin-top: 5px; width: 270px; }
+    .empty-step {
+      display: flex; align-items: center; gap: 7px;
+      background: #0d0d0d; border: 1px solid #141414; border-radius: 3px;
+      padding: 7px 9px; font-size: 0.62rem; color: #333;
+    }
+    .step-n {
+      width: 16px; height: 16px; border-radius: 50%;
+      background: #0f1e33; border: 1px solid #1a3a5c;
+      color: #60a5fa; font-size: 0.55rem; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .msg-row { display: flex; flex-direction: column; max-width: 76%; }
+    .msg-row.user      { align-self: flex-end; align-items: flex-end; }
+    .msg-row.assistant { align-self: flex-start; align-items: flex-start; }
+    .msg-bubble {
+      padding: 9px 12px; border-radius: 3px;
+      line-height: 1.65; white-space: pre-wrap; word-break: break-word; font-size: 0.75rem;
+    }
+    .user .msg-bubble      { background: #0f1e33; border: 1px solid #1a3a5c; color: #bfdbfe; }
+    .assistant .msg-bubble { background: #111; border: 1px solid #1e1e1e; color: #c0c0c0; }
+    .msg-meta { font-size: 0.58rem; color: #2a2a2a; margin-top: 3px; padding: 0 2px; }
+    .typing-dots { display: flex; gap: 4px; padding: 2px 0; }
+    .typing-dots span {
+      width: 5px; height: 5px; border-radius: 50%; background: #333;
+      animation: bounce 1.2s infinite;
+    }
+    .typing-dots span:nth-child(2) { animation-delay: .2s; }
+    .typing-dots span:nth-child(3) { animation-delay: .4s; }
+    @keyframes bounce {
+      0%,80%,100% { transform: translateY(0); opacity: .5; }
+      40% { transform: translateY(-5px); opacity: 1; }
+    }
+    #raw-panel {
+      display: none; background: #080808; border-top: 1px solid #141414;
+      max-height: 150px; overflow-y: auto; padding: 8px 1.25rem;
+    }
+    #raw-panel pre { font-size: 0.62rem; color: #333; white-space: pre-wrap; word-break: break-word; }
+    #meta-bar {
+      background: #0d0d0d; border-top: 1px solid #1e1e1e;
+      padding: 7px 1.25rem; display: flex; align-items: center; flex-shrink: 0;
+    }
+    .meta-item { display: flex; flex-direction: column; gap: 1px; padding: 0 14px; border-right: 1px solid #141414; }
+    .meta-item:first-child { padding-left: 0; }
+    .meta-item:last-of-type { border-right: none; }
+    .meta-lbl { font-size: 0.55rem; color: #333; text-transform: uppercase; letter-spacing: .07em; }
+    .meta-val { font-size: 0.7rem; font-weight: 600; color: #888; }
+    .meta-spacer { flex: 1; }
+    #new-sess-btn { font-size: 0.62rem; }
+    #input-area {
+      padding: 0.85rem 1.25rem; background: #0d0d0d;
+      border-top: 1px solid #1e1e1e; display: flex; gap: 8px; align-items: flex-end; flex-shrink: 0;
+    }
+    #quick-prompts {
+      display: flex; gap: 6px; flex-wrap: wrap;
+      padding: 0.7rem 1.25rem 0; background: #0d0d0d; border-top: 1px solid #1e1e1e;
+    }
+    .prompt-chip {
+      max-width: 260px; overflow: hidden; text-overflow: ellipsis;
+      background: #101010; border-color: #1e1e1e; color: #555;
+    }
+    #msg-input {
+      flex: 1; resize: none; height: 40px; min-height: 40px; max-height: 140px;
+      padding: 10px 12px; font-size: 0.75rem; line-height: 1.4;
+      border-radius: 3px; border: 1px solid #1e1e1e;
+      background: #111; color: #d0d0d0; font-family: inherit; outline: none;
+      transition: border-color .15s;
+    }
+    #msg-input:focus { border-color: #3b82f6; }
+    #send-btn {
+      background: #0f1e33; border: 1px solid #1a3a5c; border-radius: 3px;
+      color: #60a5fa; cursor: pointer; padding: 0 14px; height: 40px;
+      font-size: 15px; transition: all .15s; flex-shrink: 0;
+    }
+    #send-btn:hover:not(:disabled) { background: #142540; }
+    #send-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+    /* ── Sessions panel ──────────────────────────────────────── */
+    #sessions-panel { overflow: hidden; }
+    #sess-list-view { display: flex; flex-direction: column; height: 100%; overflow: hidden; }
+    #sess-detail-view { display: none; flex-direction: column; height: 100%; overflow: hidden; }
+    #sess-detail-view.visible { display: flex; }
+    #sess-list-view.hidden { display: none; }
+    .panel-toolbar {
+      padding: 0.65rem 1.25rem; background: #0d0d0d;
+      border-bottom: 1px solid #1e1e1e;
+      display: flex; align-items: center; gap: 8px; flex-shrink: 0;
+    }
+    .panel-toolbar p { font-size: 0.65rem; color: #444; flex: 1; }
+    .panel-toolbar button { width: auto; }
+    .panel-body { flex: 1; overflow-y: auto; padding: 1rem 1.25rem; }
+    .sess-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 8px;
+    }
+    .sess-card {
+      background: #0d0d0d; border: 1px solid #141414; border-radius: 3px;
+      padding: 10px 12px; cursor: pointer; transition: all .15s;
+    }
+    .sess-card:hover { border-color: #2a2a2a; background: #111; }
+    .sess-id   { font-size: 0.62rem; color: #555; margin-bottom: 5px; }
+    .sess-date { font-size: 0.6rem; color: #333; }
+    .sess-stat { display: flex; gap: 8px; margin-top: 5px; flex-wrap: wrap; }
+    .pill {
+      font-size: 0.55rem; padding: 2px 7px; border-radius: 999px; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase;
+    }
+    .pill-ok  { background: #0d2e1a; color: #34d399; border: 1px solid #065f4644; }
+    .pill-err { background: #2e0d0d; color: #f87171; border: 1px solid #7f1d1d44; }
+    .pill-dim { background: #1a1a1a; color: #444;    border: 1px solid #2a2a2a; }
+
+    /* Detail view */
+    #detail-back { font-size: 0.62rem; color: #3b82f6; cursor: pointer; }
+    #detail-back:hover { color: #60a5fa; }
+    #detail-content { display: flex; flex: 1; overflow: hidden; }
+    #transcript { flex: 1; overflow-y: auto; padding: 1rem 1.25rem; display: flex; flex-direction: column; gap: 10px; }
+    #nlp-sidebar {
+      width: 220px; flex-shrink: 0; overflow-y: auto;
+      border-left: 1px solid #141414; padding: 1rem;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .nlp-section-title {
+      font-size: 0.55rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .1em; color: #333; margin-bottom: 6px;
+    }
+    .score-big { font-size: 1.6rem; font-weight: 700; line-height: 1; }
+    .score-pos { color: #34d399; }
+    .score-neg { color: #f87171; }
+    .score-neu { color: #555; }
+    .topics-wrap { display: flex; flex-wrap: wrap; gap: 4px; }
+    .topic-chip {
+      font-size: 0.58rem; padding: 2px 7px; border-radius: 999px;
+      background: #111; border: 1px solid #1e1e1e; color: #888;
+    }
+    .topic-chip.main { background: #0f1e33; border-color: #1a3a5c; color: #60a5fa; }
+    .kv-row { display: flex; justify-content: space-between; font-size: 0.62rem; padding: 3px 0; border-top: 1px solid #0f0f0f; }
+    .kv-key { color: #333; }
+    .kv-val { color: #888; }
+    .insight-point { font-size: 0.62rem; color: #555; line-height: 1.6; padding: 3px 0; border-top: 1px solid #0f0f0f; }
+
+    /* ── Analytics panel ─────────────────────────────────────── */
+    #analytics-panel { overflow-y: auto; }
+    .analytics-body { padding: 1.25rem; display: flex; flex-direction: column; gap: 16px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .kpi-card {
+      background: #0d0d0d; border: 1px solid #141414; border-radius: 3px; padding: 12px;
+    }
+    .kpi-lbl { font-size: 0.55rem; color: #333; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 4px; }
+    .kpi-val { font-size: 1.4rem; font-weight: 700; color: #d0d0d0; line-height: 1; }
+    .kpi-sub { font-size: 0.58rem; color: #333; margin-top: 3px; }
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .a-card { background: #0d0d0d; border: 1px solid #141414; border-radius: 3px; padding: 12px; }
+    .a-card-title { font-size: 0.55rem; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #333; margin-bottom: 8px; }
+    .bar-track { height: 4px; background: #1a1a1a; border-radius: 2px; overflow: hidden; margin: 4px 0; }
+    .bar-fill  { height: 100%; border-radius: 2px; transition: width .5s; }
+    .rate-row  { display: flex; justify-content: space-between; font-size: 0.62rem; margin-bottom: 2px; }
+    .rate-val  { font-weight: 600; }
+    .stack-bar { height: 12px; border-radius: 2px; overflow: hidden; display: flex; margin: 6px 0; }
+    .stack-seg { transition: width .5s; }
+    .stack-legend { display: flex; gap: 10px; font-size: 0.58rem; color: #444; }
+    .leg-dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; margin-right: 3px; }
+    .h-bar-row { display: flex; align-items: center; gap: 6px; margin-bottom: 4px; }
+    .h-bar-lbl { font-size: 0.6rem; color: #555; min-width: 100px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .h-bar-track { flex: 1; height: 6px; background: #1a1a1a; border-radius: 2px; overflow: hidden; }
+    .h-bar-fill  { height: 100%; background: #3b82f6; border-radius: 2px; transition: width .5s; }
+    .h-bar-n { font-size: 0.58rem; color: #333; min-width: 18px; text-align: right; }
+    .tl-table { width: 100%; border-collapse: collapse; font-size: 0.62rem; }
+    .tl-table th {
+      text-align: left; padding: 5px 8px; font-size: 0.55rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: .07em; color: #333;
+      border-bottom: 1px solid #141414;
+    }
+    .tl-table td { padding: 6px 8px; border-bottom: 1px solid #0f0f0f; color: #555; }
+    .tl-table td:not(:first-child) { text-align: right; }
+    .tl-table th:not(:first-child) { text-align: right; }
+    .empty-note { text-align: center; padding: 2rem; color: #333; font-size: 0.68rem; }
+    .empty-actions { display: flex; gap: 6px; margin-top: 8px; justify-content: center; flex-wrap: wrap; }
+
+    /* ── Modal ───────────────────────────────────────────────── */
+    #modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,.75); backdrop-filter: blur(3px);
+      z-index: 200; align-items: center; justify-content: center;
+    }
+    #modal-overlay.open { display: flex; }
+    #modal {
+      background: #0d0d0d; border: 1px solid #1e1e1e;
+      border-radius: 4px; padding: 1.5rem; width: 420px; max-width: 92vw;
+    }
+    .modal-title { font-size: 0.82rem; font-weight: 600; color: #f0f0f0; margin-bottom: 3px; }
+    .modal-desc  { font-size: 0.62rem; color: #444; line-height: 1.6; margin-bottom: 1.2rem; }
+    #gen-preview {
+      background: #080808; border: 1px solid #141414; border-radius: 3px;
+      padding: 10px 12px; font-size: 0.62rem; color: #444; line-height: 2; display: none; margin-bottom: 1rem;
+    }
+    .modal-divider { height: 1px; background: #141414; margin: 1rem 0; }
+    .modal-actions { display: flex; gap: 6px; justify-content: flex-end; }
+    .modal-actions button { width: auto; }
+
+    /* ── Toast ───────────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 1.25rem; right: 1.25rem;
+      background: #0d0d0d; border: 1px solid #1e1e1e;
+      border-radius: 4px; padding: 8px 14px; font-size: 0.68rem;
+      display: none; z-index: 300; max-width: 300px;
+    }
+    #toast.show { display: block; }
+    #toast.ok  { border-color: #065f46; color: #34d399; }
+    #toast.err { border-color: #7f1d1d; color: #f87171; }
+
+    @media (max-width: 860px) {
+      body { height: auto; min-height: 100vh; overflow: auto; }
+      header { flex-wrap: wrap; height: auto; padding: 0.75rem 1rem; gap: 0.6rem; }
+      #url-input { width: min(100%, 260px); }
+      #layout { grid-template-columns: 1fr; overflow: visible; }
+      #sidebar { border-right: none; border-bottom: 1px solid #1e1e1e; max-height: none; }
+      .sb-block.grow { max-height: 220px; }
+      #main-area, .panel { min-height: 620px; }
+      #active-agent-bar { flex-wrap: wrap; padding: 0.55rem 1rem; }
+      .kpi-grid, .two-col { grid-template-columns: 1fr; }
+      #detail-content { flex-direction: column; }
+      #nlp-sidebar { width: auto; border-left: none; border-top: 1px solid #141414; }
+      .msg-row { max-width: 92%; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    <span class="logo-name">AI-ChatBot</span>
+    <span class="logo-sub">/ agent-test</span>
+  </div>
+  <div class="h-sep"></div>
+  <input id="url-input" type="text" value="http://localhost:8000" spellcheck="false" />
+  <div id="status-badge" class="status-badge idle">
+    <div class="s-dot"></div>
+    <span id="status-text">connecting</span>
+  </div>
+  <div class="h-spacer"></div>
+  <span id="ver-tag"></span>
+  <button class="header-btn" onclick="checkHealth()">check</button>
+  <span class="toggle-json" onclick="toggleRaw()">JSON</span>
+</header>
+
+<div id="layout">
+
+  <!-- ── Sidebar ────────────────────────────────────────────── -->
+  <aside id="sidebar">
+
+    <!-- Agent list -->
+    <div class="sb-block grow">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.6rem">
+        <div class="sb-lbl" style="margin:0">Agents</div>
+        <button class="btn-icon" onclick="loadAgentList()" title="Refresh">↺</button>
+      </div>
+      <div id="agent-list"><div class="list-empty">Loading…</div></div>
+    </div>
+
+    <!-- Manual auth -->
+    <div class="sb-block">
+      <div class="sb-lbl">Manual API Key</div>
+      <div class="field">
+        <div class="row">
+          <input id="api-key" type="password" placeholder="agent_id.secret" autocomplete="off" />
+          <button class="btn-icon" onclick="toggleKey()">👁</button>
+          <button class="btn-icon" onclick="copyKey()" title="Copy token">⧉</button>
+        </div>
+      </div>
+      <button class="btn-full" onclick="loadAgentByKey()">Load agent</button>
+      <div id="agent-card">
+        <div class="ac-head">
+          <div class="ac-name" id="ac-name">—</div>
+          <span class="agent-kind" id="ac-kind">agent</span>
+        </div>
+        <div class="ac-row">id     <span class="ac-val" id="ac-id">—</span></div>
+        <div class="ac-row">owner  <span class="ac-val" id="ac-owner">—</span></div>
+        <div class="ac-row">model  <span class="ac-val" id="ac-model">—</span></div>
+        <div class="ac-row">status <span class="ac-val" id="ac-status">ready</span></div>
+      </div>
+    </div>
+
+    <!-- Ephemeral -->
+    <div class="sb-block">
+      <div class="sb-lbl">No agent?</div>
+      <div class="eph-box">
+        <p>Generate a random ephemeral agent — lives in Redis for 24 h, no DB entry.</p>
+        <button class="btn-blue btn-full" onclick="openModal()">✦ Generate ephemeral</button>
+      </div>
+    </div>
+
+    <!-- Session -->
+    <div class="sb-block">
+      <div class="sb-lbl">Session</div>
+      <button class="btn-full" onclick="newSession()">↺ New conversation</button>
+      <div class="session-id" id="session-display">—</div>
+    </div>
+
+  </aside>
+
+  <!-- ── Main ───────────────────────────────────────────────── -->
+  <div id="main-area">
+    <div id="tab-bar">
+      <button class="tab-btn active" onclick="switchTab('chat')">Chat</button>
+      <button class="tab-btn" onclick="switchTab('sessions')">Sessions</button>
+      <button class="tab-btn" onclick="switchTab('analytics')">Analytics</button>
+      <div class="tab-spacer"></div>
+      <span id="top-session"></span>
+    </div>
+    <div id="active-agent-bar">
+      <span class="agent-kind" id="aa-kind">agent</span>
+      <span class="aa-name" id="aa-name">No agent loaded</span>
+      <span class="aa-meta" id="aa-meta"></span>
+      <span class="aa-spacer"></span>
+      <button class="btn-ghost" onclick="copyKey()">Copy token</button>
+    </div>
+
+    <!-- Chat -->
+    <div id="chat-panel" class="panel active">
+      <div id="messages">
+        <div id="empty-state">
+          <div class="empty-icon">⚡</div>
+          <div class="empty-title">agent-test</div>
+          <div class="empty-steps">
+            <div class="empty-step"><div class="step-n">1</div>Select an agent from the list or enter an API key</div>
+            <div class="empty-step"><div class="step-n">2</div>Or generate an ephemeral agent for quick testing</div>
+            <div class="empty-step"><div class="step-n">3</div>Send a message and inspect the API response</div>
+          </div>
+        </div>
+      </div>
+      <div id="raw-panel"><pre id="raw-content"></pre></div>
+      <div id="meta-bar">
+        <div class="meta-item"><div class="meta-lbl">in</div><div class="meta-val" id="m-in">—</div></div>
+        <div class="meta-item"><div class="meta-lbl">out</div><div class="meta-val" id="m-out">—</div></div>
+        <div class="meta-item"><div class="meta-lbl">total</div><div class="meta-val" id="m-total">—</div></div>
+        <div class="meta-item"><div class="meta-lbl">rt</div><div class="meta-val" id="m-rt">—</div></div>
+        <div class="meta-item"><div class="meta-lbl">model</div><div class="meta-val" id="m-model" style="font-size:.6rem">—</div></div>
+        <div class="meta-spacer"></div>
+        <button id="new-sess-btn" onclick="newSession()">↺ new session</button>
+      </div>
+      <div id="quick-prompts">
+        <button class="prompt-chip" onclick="applyPrompt('Responda em uma frase: o que voce pode fazer?')">capabilities</button>
+        <button class="prompt-chip" onclick="applyPrompt('Simule uma duvida de cliente e responda como este agente.')">scenario</button>
+        <button class="prompt-chip" onclick="applyPrompt('Quando voce deve escalar para atendimento humano?')">escalation</button>
+      </div>
+      <div id="input-area">
+        <textarea id="msg-input"
+          placeholder="Send a message… (Enter = send · Shift+Enter = newline)"
+          onkeydown="handleKey(event)"></textarea>
+        <button id="send-btn" onclick="sendMessage()">➤</button>
+      </div>
+    </div>
+
+    <!-- Sessions -->
+    <div id="sessions-panel" class="panel">
+      <div id="sess-list-view">
+        <div class="panel-toolbar">
+          <p id="sessions-note">Closed sessions for the active agent.</p>
+          <button onclick="loadSessions()">↺ Refresh</button>
+        </div>
+        <div class="panel-body">
+          <div id="sess-grid-wrap"><div class="empty-note">Load an agent and click Refresh.</div></div>
+        </div>
+      </div>
+      <div id="sess-detail-view">
+        <div class="panel-toolbar">
+          <span id="detail-back" onclick="backToList()">← back</span>
+          <p id="detail-title" style="margin-left:.5rem"></p>
+        </div>
+        <div id="detail-content">
+          <div id="transcript"></div>
+          <div id="nlp-sidebar"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analytics -->
+    <div id="analytics-panel" class="panel">
+      <div class="panel-toolbar">
+        <p id="analytics-note">Aggregate analytics — requires closed sessions.</p>
+        <button onclick="loadAnalytics()">↺ Refresh</button>
+      </div>
+      <div class="analytics-body" id="analytics-body">
+        <div class="empty-note">Load an agent and click Refresh.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal ──────────────────────────────────────────────────── -->
+<div id="modal-overlay">
+  <div id="modal">
+    <div class="modal-title">✦ Generate Ephemeral Agent</div>
+    <div class="modal-desc">Randomly generated persona, segment, tone and restrictions. AI model and credentials come from the server <code>.env</code>. The agent lives in Redis for 24 h — no DB write.</div>
+    <div id="gen-preview"></div>
+    <div class="modal-divider"></div>
+    <div class="modal-actions">
+      <button onclick="closeModal()">Cancel</button>
+      <button onclick="previewAgent()">Randomize</button>
+      <button class="btn-blue" id="gen-btn" onclick="generateAndCreate()">Create →</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ── State ─────────────────────────────────────────────────────
+let _sessionId   = null;
+let _bearerToken = null;  // current active bearer
+let _pendingPayload = null;
+let _activeAgent = null;
+
+// ── Helpers ───────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+const base = () => $('url-input').value.replace(/\/$/, '');
+
+function hdrs(auth = true) {
+  const h = { 'Content-Type': 'application/json' };
+  if (auth && _bearerToken) h['Authorization'] = `Bearer ${_bearerToken}`;
+  return h;
+}
+
+async function apiFetch(method, path, body, auth = true) {
+  const opts = { method, headers: hdrs(auth) };
+  if (body) opts.body = JSON.stringify(body);
+  const r = await fetch(base() + path, opts);
+  const data = await r.json().catch(() => ({}));
+  return { ok: r.ok, status: r.status, data };
+}
+
+function toast(msg, type = 'ok') {
+  const el = $('toast');
+  el.textContent = msg;
+  el.className = `show ${type}`;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+function toggleRaw() {
+  const p = $('raw-panel');
+  p.style.display = p.style.display === 'block' ? 'none' : 'block';
+}
+
+function toggleKey() {
+  const i = $('api-key');
+  i.type = i.type === 'password' ? 'text' : 'password';
+}
+
+async function copyKey() {
+  const key = $('api-key').value.trim();
+  if (!key) { toast('No token to copy', 'err'); return; }
+  try {
+    await navigator.clipboard.writeText(key);
+    toast('Token copied');
+  } catch {
+    toast('Could not copy token', 'err');
+  }
+}
+
+function applyPrompt(text) {
+  $('msg-input').value = text;
+  $('msg-input').focus();
+}
+
+// ── Health ────────────────────────────────────────────────────
+async function checkHealth() {
+  try {
+    const r = await fetch(base() + '/health/status');
+    const d = await r.json().catch(() => ({}));
+    if (r.ok) {
+      setStatus('ok', 'connected');
+      if (d.version) { $('ver-tag').textContent = `v${d.version}`; $('ver-tag').style.display = ''; }
+    } else throw 0;
+  } catch {
+    setStatus('err', 'offline');
+    $('ver-tag').style.display = 'none';
+  }
+}
+
+function setStatus(type, text) {
+  const b = $('status-badge');
+  b.className = `status-badge ${type}`;
+  $('status-text').textContent = text;
+}
+
+function setNotesForAgent() {
+  const isEphemeral = _activeAgent?.kind === 'ephemeral';
+  $('sessions-note').textContent = isEphemeral
+    ? 'Ephemeral sessions are read from Redis and expire with the test agent.'
+    : 'Closed sessions for the active agent.';
+  $('analytics-note').textContent = isEphemeral
+    ? 'Temporary analytics from Redis for the active ephemeral agent.'
+    : 'Aggregate analytics — requires closed sessions.';
+}
+
+// ── Agent list ────────────────────────────────────────────────
+async function loadAgentList() {
+  const el = $('agent-list');
+  el.innerHTML = '<div class="list-empty">Loading…</div>';
+  try {
+    const r = await fetch(base() + '/dev/agents');
+    if (!r.ok) { el.innerHTML = '<div class="list-empty">Not available (dev mode only)</div>'; return; }
+    const agents = await r.json();
+    if (!agents.length) {
+      el.innerHTML = '<div class="list-empty"><strong>No persisted agents.</strong><br>Create an ephemeral one below for a quick test.</div>';
+      return;
+    }
+    el.innerHTML = '';
+    agents.forEach(a => {
+      const div = document.createElement('div');
+      div.className = 'agent-item';
+      div.dataset.id = a.agent_id;
+      div.innerHTML = `
+        <div class="ai-name">${a.name}</div>
+        <div class="ai-meta">${a.owner} · ${a.ai_model || 'env default'}</div>
+      `;
+      div.onclick = () => selectAgent(a, div);
+      el.appendChild(div);
+    });
+  } catch { el.innerHTML = '<div class="list-empty">Connection error.</div>'; }
+}
+
+async function selectAgent(a, el) {
+  document.querySelectorAll('.agent-item').forEach(i => {
+    i.classList.remove('active');
+    i.querySelector('.ai-meta').classList.remove('active');
+  });
+  el.classList.add('active');
+  el.querySelector('.ai-meta').classList.add('active');
+
+  try {
+    const r = await fetch(`${base()}/dev/token/${a.agent_id}`, { method: 'POST' });
+    const d = await r.json();
+    if (!r.ok) { toast(d.detail || 'Failed to rotate token', 'err'); return; }
+    _bearerToken = d.bearer_token;
+    $('api-key').value = d.bearer_token;
+    setAgentCard(a.name, a.agent_id, a.owner, a.ai_model || 'env default', 'persisted');
+    newSession();
+    toast(`"${a.name}" selected`);
+  } catch { toast('Connection error', 'err'); }
+}
+
+// ── Manual API key ────────────────────────────────────────────
+async function loadAgentByKey() {
+  const key = $('api-key').value.trim();
+  if (!key) { toast('Enter an API key', 'err'); return; }
+  _bearerToken = key;
+  try {
+    const { ok, data } = await apiFetch('GET', '/agent');
+    if (!ok) { toast(data.detail || 'Invalid API key', 'err'); _bearerToken = null; return; }
+    const kind = data.owner === 'ephemeral' ? 'ephemeral' : 'persisted';
+    setAgentCard(data.name, data.agent_id, data.owner, data.ai_model || 'env default', kind);
+    newSession();
+    toast(`"${data.name}" loaded`);
+  } catch { toast('Connection error', 'err'); _bearerToken = null; }
+}
+
+function setAgentCard(name, id, owner, model, kind = 'persisted') {
+  _activeAgent = { name, id, owner, model, kind };
+  $('ac-name').textContent  = name;
+  $('ac-id').textContent    = id;
+  $('ac-owner').textContent = owner;
+  $('ac-model').textContent = model;
+  $('ac-kind').textContent = kind;
+  $('ac-kind').className = `agent-kind ${kind === 'persisted' ? 'persisted' : ''}`;
+  $('ac-status').textContent = kind === 'ephemeral' ? 'Redis TTL 24h' : 'ready';
+  $('agent-card').classList.add('visible');
+  updateActiveAgentBar();
+  setNotesForAgent();
+}
+
+function updateActiveAgentBar() {
+  if (!_activeAgent) {
+    $('active-agent-bar').classList.remove('visible');
+    return;
+  }
+  $('aa-kind').textContent = _activeAgent.kind;
+  $('aa-kind').className = `agent-kind ${_activeAgent.kind === 'persisted' ? 'persisted' : ''}`;
+  $('aa-name').textContent = _activeAgent.name;
+  $('aa-meta').textContent = `${_activeAgent.owner} · ${_activeAgent.model} · ${_activeAgent.id}`;
+  $('active-agent-bar').classList.add('visible');
+}
+
+// ── Tabs ──────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[onclick="switchTab('${name}')"]`).classList.add('active');
+  $(`${name}-panel`).classList.add('active');
+  if (_activeAgent?.kind === 'ephemeral' && (name === 'sessions' || name === 'analytics')) {
+    toast('Showing temporary Redis data for this ephemeral agent.');
+  }
+}
+
+// ── Session ───────────────────────────────────────────────────
+function newSession() {
+  _sessionId = crypto.randomUUID();
+  $('session-display').textContent = _sessionId;
+  $('top-session').textContent = _sessionId.slice(0, 8) + '…';
+  $('messages').innerHTML = emptyStateHtml();
+  clearMeta();
+}
+
+function emptyStateHtml() {
+  const agentLine = _activeAgent
+    ? `<div class="empty-title">${_activeAgent.name}</div>`
+    : '<div class="empty-title">agent-test</div>';
+  return `
+    <div id="empty-state">
+      <div class="empty-icon">⚡</div>
+      ${agentLine}
+      <div class="empty-steps">
+        <div class="empty-step"><div class="step-n">1</div>${_activeAgent ? 'Agent loaded and ready' : 'Select an agent, paste a key, or create an ephemeral one'}</div>
+        <div class="empty-step"><div class="step-n">2</div>Send a message from the composer</div>
+        <div class="empty-step"><div class="step-n">3</div>Inspect tokens, latency and raw JSON when needed</div>
+      </div>
+    </div>
+  `;
+}
+
+function clearMeta() {
+  ['m-in','m-out','m-total','m-rt','m-model'].forEach(id => $(id).textContent = '—');
+}
+
+// ── Chat ──────────────────────────────────────────────────────
+async function sendMessage() {
+  const text = $('msg-input').value.trim();
+  if (!text) return;
+  if (!_bearerToken) { toast('Select or load an agent first', 'err'); return; }
+  if (!_sessionId) newSession();
+
+  $('empty-state')?.remove();
+  appendMsg('user', text);
+  $('msg-input').value = '';
+  $('send-btn').disabled = true;
+  const tid = appendTyping();
+
+  try {
+    const { ok, status, data } = await apiFetch('POST', '/chat', { session_id: _sessionId, message: text });
+    removeTyping(tid);
+    if (!ok) {
+      appendMsg('assistant', data.detail || `Request failed with status ${status}`);
+      toast(data.detail || `Error ${data.status || ''}`, 'err');
+      $('send-btn').disabled = false;
+      return;
+    }
+
+    $('raw-content').textContent = JSON.stringify(data, null, 2);
+    const asst = data.conversation?.find(e => e.message.role === 'assistant');
+    if (asst) appendMsg('assistant', asst.message.content, { tokens: asst.message.tokens, rt: asst.message.response_time_ms });
+
+    const s = data.session;
+    if (s) {
+      $('m-in').textContent    = s.tokens?.input  ?? '—';
+      $('m-out').textContent   = s.tokens?.output ?? '—';
+      $('m-total').textContent = s.tokens?.total  ?? '—';
+      $('m-rt').textContent    = s.response_time_ms != null ? `${s.response_time_ms}ms` : '—';
+      $('m-model').textContent = s.model ?? '—';
+    }
+  } catch {
+    removeTyping(tid);
+    toast('Connection error', 'err');
+  }
+  $('send-btn').disabled = false;
+}
+
+function handleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+}
+
+function appendMsg(role, content, meta = {}) {
+  const wrap = document.createElement('div');
+  wrap.className = `msg-row ${role}`;
+  const bubble = document.createElement('div');
+  bubble.className = 'msg-bubble';
+  bubble.textContent = content;
+  const metaEl = document.createElement('div');
+  metaEl.className = 'msg-meta';
+  const parts = [new Date().toLocaleTimeString()];
+  if (meta.tokens) parts.push(`${meta.tokens} tok`);
+  if (meta.rt)     parts.push(`${meta.rt}ms`);
+  metaEl.textContent = parts.join(' · ');
+  wrap.appendChild(bubble);
+  wrap.appendChild(metaEl);
+  const msgs = $('messages');
+  msgs.appendChild(wrap);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function appendTyping() {
+  const id = 'typing-' + Date.now();
+  const wrap = document.createElement('div');
+  wrap.id = id;
+  wrap.className = 'msg-row assistant';
+  wrap.innerHTML = '<div class="msg-bubble"><div class="typing-dots"><span></span><span></span><span></span></div></div>';
+  $('messages').appendChild(wrap);
+  $('messages').scrollTop = 99999;
+  return id;
+}
+function removeTyping(id) { $(id)?.remove(); }
+
+// ── Sessions tab ──────────────────────────────────────────────
+async function loadSessions() {
+  if (!_bearerToken) { toast('Load an agent first', 'err'); return; }
+  const wrap = $('sess-grid-wrap');
+  wrap.innerHTML = '<div class="empty-note">Loading…</div>';
+  try {
+    const path = _activeAgent?.kind === 'ephemeral' ? '/dev/agent/ephemeral/sessions' : '/data/chat';
+    const { ok, data } = await apiFetch('GET', path);
+    if (!ok || !data.chats?.length) {
+      wrap.innerHTML = `<div class="empty-note">${_activeAgent?.kind === 'ephemeral' ? 'No ephemeral sessions yet. Send a chat message first.' : 'No closed sessions yet.'}</div>`;
+      return;
+    }
+    const sorted = [...data.chats].sort((a, b) => (b.ended_at || '').localeCompare(a.ended_at || ''));
+    wrap.innerHTML = '';
+    const grid = document.createElement('div');
+    grid.className = 'sess-grid';
+    sorted.forEach(s => {
+      const card = document.createElement('div');
+      card.className = 'sess-card';
+      const badge = s.escalated ? '<span class="pill pill-err">escalated</span>'
+                  : s.resolved  ? '<span class="pill pill-ok">resolved</span>'
+                  :               '<span class="pill pill-dim">closed</span>';
+      card.innerHTML = `
+        <div class="sess-id">${s.session_id.slice(0,20)}…</div>
+        <div class="sess-date">${s.ended_at ? new Date(s.ended_at).toLocaleString() : '—'}</div>
+        <div class="sess-stat">${badge}<span class="pill pill-dim">${s.total_messages} msgs</span><span class="pill pill-dim">${(s.total_tokens||0).toLocaleString()} tok</span></div>
+      `;
+      card.onclick = () => openSession(s.session_id);
+      grid.appendChild(card);
+    });
+    wrap.appendChild(grid);
+  } catch { wrap.innerHTML = '<div class="empty-note">Connection error.</div>'; }
+}
+
+async function openSession(sid) {
+  $('sess-list-view').classList.add('hidden');
+  const dv = $('sess-detail-view');
+  dv.classList.add('visible');
+  $('detail-title').textContent = sid.slice(0,18) + '…';
+  $('transcript').innerHTML = '<div class="empty-note">Loading…</div>';
+  $('nlp-sidebar').innerHTML = '';
+
+  try {
+    if (_activeAgent?.kind === 'ephemeral') {
+      const { ok, data } = await apiFetch('GET', `/dev/agent/ephemeral/sessions/${sid}`);
+      if (!ok) { $('transcript').innerHTML = '<div class="empty-note">Session not found.</div>'; return; }
+      renderSessionDetail(data.conversation || [], data.sentiment, data.topics, data.metrics);
+      return;
+    }
+
+    const [histRes, sentRes, topRes, metRes] = await Promise.all([
+      apiFetch('GET', `/data/chat/${sid}`),
+      apiFetch('GET', `/data/chat/${sid}/insights/sentiment`),
+      apiFetch('GET', `/data/chat/${sid}/insights/topics`),
+      apiFetch('GET', `/data/chat/${sid}/insights/metrics`),
+    ]);
+
+    renderSessionDetail(
+      histRes.data?.conversation || [],
+      sentRes.ok ? sentRes.data.sentiment : null,
+      topRes.ok ? topRes.data.topics : null,
+      metRes.ok ? metRes.data.metrics : null,
+    );
+  } catch { $('transcript').innerHTML = '<div class="empty-note">Connection error.</div>'; }
+}
+
+function renderSessionDetail(history, sentiment, topics, metrics) {
+  const tr = $('transcript');
+  tr.innerHTML = '';
+  if (!history.length) { tr.innerHTML = '<div class="empty-note">No messages.</div>'; }
+  else history.forEach(entry => {
+    const m = entry.message;
+    const wrap = document.createElement('div');
+    wrap.className = `msg-row ${m.role}`;
+    const bubble = document.createElement('div');
+    bubble.className = 'msg-bubble';
+    bubble.textContent = m.content;
+    const meta = document.createElement('div');
+    meta.className = 'msg-meta';
+    meta.textContent = m.tokens ? `${m.tokens} tok` : '';
+    wrap.appendChild(bubble);
+    wrap.appendChild(meta);
+    tr.appendChild(wrap);
+  });
+
+  const nl = $('nlp-sidebar');
+  nl.innerHTML = '';
+  if (sentiment) {
+    const score = sentiment.score ?? 0;
+    const label = sentiment.label ?? 'neutral';
+    const scoreClass = label === 'positive' ? 'score-pos' : label === 'negative' ? 'score-neg' : 'score-neu';
+    nl.innerHTML += `
+      <div>
+        <div class="nlp-section-title">Sentiment</div>
+        <div class="${scoreClass} score-big">${score >= 0 ? '+' : ''}${score.toFixed(3)}</div>
+        <div style="font-size:.6rem;color:#333;margin-top:3px">${label}</div>
+      </div>
+    `;
+  }
+  if (topics) {
+    const chips = (topics.detected || []).map(tp =>
+      `<span class="topic-chip${tp === topics.main_topic ? ' main' : ''}">${tp}</span>`
+    ).join('') || '<span style="color:#333;font-size:.6rem">none detected</span>';
+    nl.innerHTML += `
+      <div>
+        <div class="nlp-section-title">Topics</div>
+        <div class="topics-wrap">${chips}</div>
+        ${topics.intent ? `<div style="font-size:.6rem;color:#555;margin-top:6px">intent: <span style="color:#3b82f6">${topics.intent}</span></div>` : ''}
+      </div>
+    `;
+  }
+  if (metrics) {
+    nl.innerHTML += `
+      <div>
+        <div class="nlp-section-title">Metrics</div>
+        <div class="kv-row"><span class="kv-key">messages</span><span class="kv-val">${metrics.total_messages}</span></div>
+        <div class="kv-row"><span class="kv-key">tokens</span><span class="kv-val">${metrics.total_tokens}</span></div>
+        <div class="kv-row"><span class="kv-key">avg msg</span><span class="kv-val">${metrics.avg_user_message_length?.toFixed(0) ?? '—'} chars</span></div>
+        <div class="kv-row"><span class="kv-key">avg rt</span><span class="kv-val">${metrics.avg_response_time_ms > 0 ? metrics.avg_response_time_ms + 'ms' : '—'}</span></div>
+        <div class="kv-row"><span class="kv-key">state</span><span class="kv-val">${metrics.resolution || 'open'}</span></div>
+      </div>
+    `;
+  }
+}
+
+function backToList() {
+  $('sess-detail-view').classList.remove('visible');
+  $('sess-list-view').classList.remove('hidden');
+}
+
+// ── Analytics tab ─────────────────────────────────────────────
+async function loadAnalytics() {
+  if (!_bearerToken) { toast('Load an agent first', 'err'); return; }
+  const body = $('analytics-body');
+  body.innerHTML = '<div class="empty-note">Loading…</div>';
+  try {
+    const path = _activeAgent?.kind === 'ephemeral' ? '/dev/agent/ephemeral/analytics' : '/data/analytics';
+    const { ok, data } = await apiFetch('GET', path);
+    if (!ok) { body.innerHTML = '<div class="empty-note">Error loading analytics.</div>'; return; }
+    body.innerHTML = '';
+    renderKPIs(data.summary);
+    renderRates(data.summary);
+    renderSentimentDist(data.sentiment);
+    renderTopTopics(data.patterns);
+    renderTimeline(data.timeline);
+  } catch { body.innerHTML = '<div class="empty-note">Connection error.</div>'; }
+}
+
+function renderKPIs(s) {
+  if (!s) return;
+  const div = document.createElement('div');
+  div.className = 'kpi-grid';
+  [
+    { l: 'Sessions',  v: s.total_chats,    sub: `${(s.resolution_rate*100|0)}% resolved` },
+    { l: 'Messages',  v: s.total_messages, sub: `${(s.avg_messages_per_chat||0).toFixed(1)} avg` },
+    { l: 'Users',     v: s.total_users,    sub: `${(s.avg_chats_per_user||0).toFixed(1)} sessions each` },
+    { l: 'Tokens',    v: fmtN(s.total_tokens_used), sub: `${fmtN(s.avg_tokens_per_chat|0)} avg` },
+  ].forEach(i => {
+    div.innerHTML += `<div class="kpi-card"><div class="kpi-lbl">${i.l}</div><div class="kpi-val">${i.v}</div><div class="kpi-sub">${i.sub}</div></div>`;
+  });
+  $('analytics-body').appendChild(div);
+}
+
+function renderRates(s) {
+  if (!s) return;
+  const div = document.createElement('div');
+  div.className = 'two-col';
+  const rP = ((s.resolution_rate||0)*100).toFixed(1);
+  const eP = ((s.escalation_rate||0)*100).toFixed(1);
+  div.innerHTML = `
+    <div class="a-card">
+      <div class="a-card-title">Resolution rate</div>
+      <div class="rate-row"><span>Resolved</span><span class="rate-val" style="color:#34d399">${rP}%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${rP}%;background:#34d399"></div></div>
+    </div>
+    <div class="a-card">
+      <div class="a-card-title">Escalation rate</div>
+      <div class="rate-row"><span>Escalated</span><span class="rate-val" style="color:#f87171">${eP}%</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${eP}%;background:#f87171"></div></div>
+    </div>
+  `;
+  $('analytics-body').appendChild(div);
+}
+
+function renderSentimentDist(sentiment) {
+  if (!sentiment) return;
+  const d = sentiment.distribution || {};
+  const pos = ((d.positive||0)*100).toFixed(1);
+  const neu = ((d.neutral||0)*100).toFixed(1);
+  const neg = ((d.negative||0)*100).toFixed(1);
+  const avg = (sentiment.avg_score||0).toFixed(4);
+  const div = document.createElement('div');
+  div.className = 'a-card';
+  div.innerHTML = `
+    <div class="a-card-title">Sentiment distribution</div>
+    <div style="font-size:.6rem;color:#444;margin-bottom:6px">avg score: <span style="color:${avg>=0?'#34d399':'#f87171'}">${avg>=0?'+':''}${avg}</span></div>
+    <div class="stack-bar">
+      <div class="stack-seg" style="width:${pos}%;background:#34d399" title="positive ${pos}%"></div>
+      <div class="stack-seg" style="width:${neu}%;background:#333" title="neutral ${neu}%"></div>
+      <div class="stack-seg" style="width:${neg}%;background:#f87171" title="negative ${neg}%"></div>
+    </div>
+    <div class="stack-legend">
+      <span><span class="leg-dot" style="background:#34d399"></span>pos ${pos}%</span>
+      <span><span class="leg-dot" style="background:#333"></span>neu ${neu}%</span>
+      <span><span class="leg-dot" style="background:#f87171"></span>neg ${neg}%</span>
+    </div>
+  `;
+  $('analytics-body').appendChild(div);
+}
+
+function renderTopTopics(patterns) {
+  if (!patterns) return;
+  const topics = (patterns.most_common_topics||[]).slice(0,8);
+  if (!topics.length) return;
+  const maxC = Math.max(...topics.map(t => t.count), 1);
+  const div = document.createElement('div');
+  div.className = 'a-card';
+  div.innerHTML = `
+    <div class="a-card-title">Top topics</div>
+    ${topics.map(t => `
+      <div class="h-bar-row">
+        <div class="h-bar-lbl" title="${t.topic}">${t.topic}</div>
+        <div class="h-bar-track"><div class="h-bar-fill" style="width:${(t.count/maxC*100).toFixed(0)}%"></div></div>
+        <div class="h-bar-n">${t.count}</div>
+      </div>
+    `).join('')}
+  `;
+  $('analytics-body').appendChild(div);
+}
+
+function renderTimeline(timeline) {
+  if (!timeline?.length) return;
+  const recent = timeline.slice(-10).reverse();
+  const div = document.createElement('div');
+  div.className = 'a-card';
+  div.innerHTML = `
+    <div class="a-card-title">Timeline</div>
+    <table class="tl-table">
+      <thead><tr><th>Date</th><th>Sessions</th><th>Resolved</th><th>Escalated</th><th>Tokens</th><th>Sentiment</th></tr></thead>
+      <tbody>${recent.map(e => {
+        const sc = e.avg_sentiment_score||0;
+        const c = sc > .1 ? '#34d399' : sc < -.1 ? '#f87171' : '#555';
+        return `<tr>
+          <td>${e.date}</td><td>${e.total_chats}</td><td>${e.resolved}</td><td>${e.escalated}</td>
+          <td>${fmtN(e.total_tokens)}</td><td style="color:${c}">${sc>=0?'+':''}${sc.toFixed(3)}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+  `;
+  $('analytics-body').appendChild(div);
+}
+
+// ── Ephemeral generator ───────────────────────────────────────
+const _G = {
+  names:    ['Assistente Comercial','Suporte Técnico','Atendimento ao Cliente','Bot de Vendas','Assistente Financeiro','Agente de RH','Consultor Virtual','Assistente Jurídico'],
+  brands:   ['Nexus','Orion','Vega','Atlas','Helix','Pulse','Kora','Zenit'],
+  segments: ['e-commerce','saúde','educação','financeiro','logística','jurídico','varejo','tecnologia'],
+  tones:    ['formal','informal','neutro'],
+  langs:    ['pt-BR','en-US','es-ES'],
+  personas: [['Sofia','f'],['Lucas','m'],['Alex','n'],['Marina','f'],['Bruno','m'],['Lia','f']],
+  behaviors: [
+    'Responda perguntas sobre pedidos, produtos e políticas. Priorize resolução no primeiro contato.',
+    'Auxilie o cliente com dúvidas técnicas. Escale apenas quando não houver solução disponível.',
+    'Ofereça suporte financeiro, tire dúvidas sobre cobranças. Nunca forneça dados bancários.',
+    'Ajude com agendamentos, consultas e informações de planos. Seja empático e claro.',
+  ],
+  fallbacks: [
+    'Desculpe, não entendi. Poderia reformular sua pergunta?',
+    'Não consegui processar sua solicitação. Tente novamente.',
+    'Essa solicitação está fora do meu escopo. Posso te ajudar com outra coisa?',
+  ],
+  topics:   [['política','religião','concorrentes'],['finanças pessoais','criptomoedas'],['medicina','diagnósticos'],['conteúdo adulto','violência']],
+  keywords: [['reembolso','estorno','falar com humano'],['reclamação','advogado','procon'],['urgente','emergência','crítico']],
+};
+
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const randId = (n=8) => Math.random().toString(36).slice(2, 2+n);
+
+function buildPayload() {
+  const name  = pick(_G.names);
+  const brand = pick(_G.brands);
+  const seg   = pick(_G.segments);
+  const [pName, pGen] = pick(_G.personas);
+  const pronoun = pGen === 'm' ? 'ele' : pGen === 'f' ? 'ela' : 'o assistente';
+  return {
+    name: `${name} ${brand}`,
+    context: {
+      tone: pick(_G.tones), language: pick(_G.langs), segment: seg,
+      persona: `Você é ${pName}, assistente virtual da ${brand}. Seja cordial e objetivo. Quando não souber a resposta, diga que ${pronoun} vai verificar.`,
+      behavior: pick(_G.behaviors),
+      fallback_message: pick(_G.fallbacks),
+      restrictions: { topics: pick(_G.topics), files: [] },
+      escalation_trigger: { operator: 'OR', conditions: [{ type: 'keyword', values: pick(_G.keywords), threshold: 1 }] },
+      escalation_destination: { type: 'none' },
+      knowledge_base: null, api_datasource: null, webhook_datasource: null, sql_datasource: null,
+    },
+  };
+}
+
+function openModal() { _pendingPayload = null; $('gen-preview').style.display = 'none'; $('modal-overlay').classList.add('open'); }
+function closeModal() { $('modal-overlay').classList.remove('open'); }
+
+function previewAgent() {
+  _pendingPayload = buildPayload();
+  const c = _pendingPayload.context;
+  const p = $('gen-preview');
+  p.innerHTML = [
+    `name     <strong style="color:#d0d0d0">${_pendingPayload.name}</strong>`,
+    `segment  ${c.segment}`,
+    `tone     ${c.tone}`,
+    `language ${c.language}`,
+    `model    env default`,
+    `ttl      24 h (Redis only)`,
+  ].join('<br>');
+  p.style.display = 'block';
+}
+
+async function generateAndCreate() {
+  if (!_pendingPayload) _pendingPayload = buildPayload();
+  const btn = $('gen-btn');
+  btn.disabled = true; btn.textContent = 'Creating…';
+  try {
+    const r = await fetch(base() + '/dev/agent/ephemeral', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(_pendingPayload),
+    });
+    const data = await r.json().catch(() => ({}));
+    if (!r.ok) { toast(data.detail || 'Error creating agent', 'err'); return; }
+    _bearerToken = data.api_key;
+    $('api-key').value = data.api_key;
+    setAgentCard(data.name, data.agent_id, 'ephemeral', 'env default', 'ephemeral');
+    closeModal();
+    newSession();
+    toast(`"${data.name}" created (Redis, 24h)`);
+  } catch { toast('Connection error', 'err'); }
+  finally { btn.disabled = false; btn.textContent = 'Create →'; }
+}
+
+function fmtN(n) { return (n||0).toLocaleString(); }
+
+// ── Init ──────────────────────────────────────────────────────
+checkHealth();
+setInterval(checkHealth, 30_000);
+newSession();
+loadAgentList();
+</script>
+</body>
+</html>

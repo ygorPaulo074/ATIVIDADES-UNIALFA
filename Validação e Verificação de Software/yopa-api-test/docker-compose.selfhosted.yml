@@ -1,0 +1,79 @@
+# AI-ChatBot — Self-hosted reference compose (open source, no Yopa Proxy)
+#
+# Stack: Caddy (reverse proxy + TLS) + API + Redis
+# Auth:  standalone mode (Bearer {agent_id}.{secret})
+# Store: local JSON files (default). To use PostgreSQL, set STORAGE_TYPE=database
+#        and uncomment the `db` service block below.
+#
+# Quick start:
+#   1. Copy .env.example to .env and fill in at minimum:
+#        AI_MODEL, AI_API_KEY (or leave empty and set per agent via POST /agent)
+#        SQL_ENCRYPTION_KEY (run: python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())")
+#   2. Edit Caddyfile: replace `your-domain.com` with your domain (or use `:80` for local)
+#   3. docker compose -f docker-compose.selfhosted.yml up -d
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile.selfhosted:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - api
+
+  api:
+    build: .
+    image: ai-chatbot-api:${APP_VERSION}
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      RUN_MODE: production
+      AUTH_MODE: standalone
+      STORAGE_TYPE: local
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    expose:
+      - "8000"
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Optional: PostgreSQL (uncomment to use STORAGE_TYPE=database) ──────────
+  # db:
+  #   image: postgres:16-alpine
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_USER: ${DB_USER}
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD}
+  #     POSTGRES_DB: ${DB_NAME}
+  #   volumes:
+  #     - db_data:/var/lib/postgresql/data
+  #     - ./scripts/schema.sql:/docker-entrypoint-initdb.d/schema.sql
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U $${DB_USER} -d $${DB_NAME}"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+volumes:
+  caddy_data:
+  caddy_config:
+  redis_data:
+  # db_data:

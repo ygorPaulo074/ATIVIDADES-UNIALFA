@@ -1,0 +1,17 @@
+# IA — cliente LLM e roteamento multi-model
+litellm
+
+# Análise local de conversas (NLP)
+textblob
+spacy
+scikit-learn
+argostranslate
+pyspellchecker
+langdetect
+
+# Sanitização de PII
+presidio-analyzer
+presidio-anonymizer
+
+# Extração de texto de PDF
+pdfplumber

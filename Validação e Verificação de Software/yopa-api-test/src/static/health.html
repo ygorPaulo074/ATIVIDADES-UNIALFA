@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Server Status — AI-ChatBot</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0a0a0a;
+      color: #e0e0e0;
+      font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2.5rem;
+      border-bottom: 1px solid #1e1e1e;
+      padding-bottom: 1.25rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .logo-dot { width: 10px; height: 10px; border-radius: 50%; background: #3b82f6; flex-shrink: 0; }
+    .logo-name { font-size: 1rem; font-weight: 600; color: #f0f0f0; }
+    .logo-sub  { font-size: 0.75rem; color: #444; margin-left: 0.25rem; }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 999px;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: all 0.2s;
+    }
+    .badge.loading { background: #1a1a1a; color: #444; border: 1px solid #2a2a2a; }
+    .badge.ok      { background: #0d2e1a; color: #34d399; border: 1px solid #065f46; }
+    .badge.error   { background: #2e0d0d; color: #f87171; border: 1px solid #7f1d1d; }
+
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+    .badge.loading .badge-dot { background: #444; }
+    .badge.ok    .badge-dot   { background: #34d399; box-shadow: 0 0 6px #34d39988; }
+    .badge.error .badge-dot   { background: #f87171; box-shadow: 0 0 6px #f8717188; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .card {
+      background: #111;
+      border: 1px solid #1e1e1e;
+      border-radius: 8px;
+      padding: 1.25rem 1.1rem;
+    }
+    .card-label {
+      font-size: 0.62rem;
+      color: #444;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.5rem;
+    }
+    .card-value {
+      font-size: 0.95rem;
+      color: #d0d0d0;
+      word-break: break-all;
+    }
+
+    h2 {
+      font-size: 0.62rem;
+      color: #ffffff;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin-bottom: 0.75rem;
+    }
+
+    .table-wrap {
+      border: 1px solid #1e1e1e;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.78rem; }
+
+    thead th {
+      text-align: left;
+      padding: 0.6rem 0.9rem;
+      color: #ffffff;
+      font-size: 0.62rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      background: #111;
+      border-bottom: 1px solid #1e1e1e;
+    }
+    tbody tr { border-bottom: 1px solid #141414; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: #111; }
+    tbody td { padding: 0.55rem 0.9rem; color: #888; }
+    tbody td.ts { color: #ffffff; font-size: 0.72rem; }
+    .ok-text    { color: #34d399; }
+    .error-text { color: #f87171; }
+
+    .empty {
+      padding: 2rem;
+      text-align: center;
+      color: #ffffff;
+      font-size: 0.8rem;
+    }
+
+    footer {
+      margin-top: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.7rem;
+      color: #444;
+    }
+    button {
+      background: #1a1a1a;
+      border: 1px solid #2a2a2a;
+      color: #666;
+      padding: 0.4rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.72rem;
+      font-family: inherit;
+      transition: all 0.15s;
+    }
+    button:hover { background: #222; color: #aaa; border-color: #333; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">
+      <div class="logo-dot"></div>
+      <span class="logo-name">AI-ChatBot</span>
+      <span class="logo-sub">/ server status</span>
+    </div>
+    <div id="badge" class="badge loading">
+      <div class="badge-dot"></div>
+      <span>loading</span>
+    </div>
+  </header>
+
+  <div class="grid">
+    <div class="card"><div class="card-label">Version</div><div class="card-value" id="s-version">—</div></div>
+    <div class="card"><div class="card-label">Uptime</div><div class="card-value" id="s-uptime">—</div></div>
+    <div class="card"><div class="card-label">Started at</div><div class="card-value" id="s-started">—</div></div>
+    <div class="card"><div class="card-label">Storage</div><div class="card-value" id="s-storage">—</div></div>
+  </div>
+
+  <h2>Recent checks</h2>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Timestamp</th>
+          <th>Status</th>
+          <th>Uptime at check</th>
+        </tr>
+      </thead>
+      <tbody id="history">
+        <tr><td colspan="3" class="empty">Polling…</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <footer>
+    <span id="last-refresh">—</span>
+    <button onclick="poll()">Refresh</button>
+  </footer>
+
+  <script>
+    function fmtUptime(s) {
+      if (s < 60) return `${Math.round(s)}s`;
+      if (s < 3600) return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
+      const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+      return `${h}h ${m}m`;
+    }
+
+    function fmtTs(iso) {
+      return new Date(iso).toLocaleString(undefined, {
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit',
+      });
+    }
+
+    async function poll() {
+      try {
+        const r = await fetch('/health/status');
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const d = await r.json();
+
+        const isOk = d.status === 'ok';
+        const badge = document.getElementById('badge');
+        badge.className = `badge ${isOk ? 'ok' : 'error'}`;
+        badge.innerHTML = `<div class="badge-dot"></div><span>${isOk ? 'online' : 'offline'}</span>`;
+
+        document.getElementById('s-version').textContent = d.version  || '—';
+        document.getElementById('s-uptime').textContent  = fmtUptime(d.uptime_seconds);
+        document.getElementById('s-started').textContent = fmtTs(d.started_at);
+        document.getElementById('s-storage').textContent = d.storage  || '—';
+
+        const tbody = document.getElementById('history');
+        const checks = [...(d.recent_checks || [])].reverse();
+
+        if (checks.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="3" class="empty">No checks recorded yet.</td></tr>';
+        } else {
+          tbody.innerHTML = checks.map(c => `
+            <tr>
+              <td class="ts">${fmtTs(c.timestamp)}</td>
+              <td class="${c.status === 'ok' ? 'ok-text' : 'error-text'}">${c.status}</td>
+              <td>${fmtUptime(c.uptime_seconds)}</td>
+            </tr>
+          `).join('');
+        }
+
+        document.getElementById('last-refresh').textContent =
+          `Last refresh: ${new Date().toLocaleTimeString()}`;
+      } catch (e) {
+        const badge = document.getElementById('badge');
+        badge.className = 'badge error';
+        badge.innerHTML = '<div class="badge-dot"></div><span>offline</span>';
+        document.getElementById('last-refresh').textContent = `Error: ${e.message}`;
+      }
+    }
+
+    poll();
+    setInterval(poll, 15000);
+  </script>
+</body>
+</html>

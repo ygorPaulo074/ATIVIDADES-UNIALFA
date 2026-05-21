@@ -1,0 +1,34 @@
+# Ambiente
+.env
+.venv
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Dados gerados em runtime
+data/
+
+# Logs
+*.log
+
+# Scripts gerados pelo setup
+scripts/
+docker-compose.yml
+
+# Setup
+.initialized
+
+# Testes
+.pytest_cache/
+htmlcov/
+.coverage
+test_context.py
+
+# IDEs
+.vscode/
+.idea/
+
+# Sistema
+.DS_Store
+Thumbs.db

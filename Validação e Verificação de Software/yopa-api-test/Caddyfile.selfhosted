@@ -1,0 +1,6 @@
+# Replace `your-domain.com` with your actual domain — Caddy handles TLS automatically via Let's Encrypt.
+# For local testing without a domain, replace with `:80` (HTTP only).
+
+your-domain.com {
+    reverse_proxy api:8000
+}

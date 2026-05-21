@@ -1,0 +1,36 @@
+# Core API
+fastapi
+uvicorn
+python-multipart
+
+# Cache
+redis
+
+# Validação e configuração
+pydantic
+pydantic-settings
+python-dotenv
+
+# HTTP (webhook driver + url_fetcher)
+requests
+beautifulsoup4
+feedparser
+
+# Banco de dados
+sqlalchemy
+psycopg2-binary
+sqlparse
+
+# Extração de arquivos simples
+python-docx
+openpyxl
+
+# Logs
+loguru
+
+# Testes
+pytest
+pytest-cov
+httpx
+invoke
+fakeredis
