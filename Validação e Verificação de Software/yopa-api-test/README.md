@@ -34,10 +34,11 @@ desenvolvimento.
 
 ## 3. Diferenças em relação ao AI-ChatBot original
 
-1. **Pasta `tests/` original foi removida** e será reescrita do zero para
-   fins didáticos. As classes existentes serviram como referência (ver
-   `OUTLINE.md` e o documento `trabalho-faculdade-pytest.txt` em
-   `/home/pygor/projetos/`).
+1. **Pasta `tests/` original foi removida e reescrita do zero** para
+   fins didáticos, dividida em `tests/part1/` (133 testes) e
+   `tests/part2/` (53 testes) — **186 testes no total, todos passando**.
+   As classes originais serviram de referência (ver `OUTLINE.md` e o
+   documento `trabalho-faculdade-pytest.txt` em `/home/pygor/projetos/`).
 2. **`pytest-cov` adicionado** ao `requirements-base.txt` para gerar
    relatórios de cobertura.
 3. **`pytest.ini` adicionado** com markers customizados (`unit`,
@@ -48,11 +49,12 @@ desenvolvimento.
 
 ## 4. Divisão do trabalho
 
-| Parte | Responsável | Camadas | Pasta |
-|---|---|---|---|
-| Parte 1 | Paulo Ygor | `application/` + `infrastructure/` | `tests/part1/` |
-| Parte 2 | Aysha | `interfaces/http/` | `tests/part2/` |
+| Parte | Responsável | Camadas | Pasta | Testes |
+|---|---|---|---|---|
+| Parte 1 | Paulo Ygor | `application/` + `infrastructure/` | `tests/part1/` | 133 |
+| Parte 2 | Aysha | `interfaces/http/` | `tests/part2/` | 53 |
 
+Suíte completa: **186 testes, todos passando** (`pytest tests/`).
 Detalhes em `OUTLINE.md` e em `trabalho-faculdade-pytest.txt`.
 
 ## 5. Setup local
@@ -110,10 +112,11 @@ pytest --cov=src --cov-report=term-missing
 
 ```
 tests/
-├── conftest.py         fixtures compartilhadas (client, agent, mock_ai, fakeredis)
+├── conftest.py         fixtures compartilhadas (client, agent, mock_ai, fakeredis) + hooks de log
 ├── shared/
-│   └── factories.py    helpers para construir payloads
-├── part1/              testes da Parte 1 (autor)
+│   ├── factories.py    helpers para construir payloads
+│   └── log_helper.py   decorator @logged e gravação em logs/
+├── part1/              testes da Parte 1 (Paulo Ygor) — 133 testes
 │   ├── test_security.py
 │   ├── test_context_builder.py
 │   ├── test_chat_service.py
@@ -123,7 +126,10 @@ tests/
 │   ├── test_sql_tool.py
 │   ├── test_webhook_tool.py
 │   └── test_file_extractor.py
-└── part2/              testes da Parte 2 (assistente — ainda vazio)
+└── part2/              testes da Parte 2 (Aysha) — 53 testes
+    ├── test_agent.py   /agent, /agent/context, /agent/knowledge, soft deletes
+    ├── test_chat.py    /chat, ciclo de vida de sessão, R1-14, R1-12 (HMAC)
+    └── test_data.py    /data/chat, /data/analytics, insights, fallback R1-8
 ```
 
 ## 8. Logs de execução
