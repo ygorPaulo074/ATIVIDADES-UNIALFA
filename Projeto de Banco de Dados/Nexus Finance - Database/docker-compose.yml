@@ -1,0 +1,22 @@
+# ============================================================
+#  ORQUESTRADOR — sobe os 4 serviços numa stack única
+# ============================================================
+#  Uso:  docker compose up        (na raiz do projeto)
+#
+#  Usa a diretiva `include:` (Docker Compose 2.20+) para reaproveitar
+#  os composes autônomos de cada subprojeto. Todos vivem no mesmo
+#  projeto/rede, então se enxergam pelos nomes dos serviços:
+#    - frontend  -> http://localhost:5173
+#    - backend   -> http://localhost:8000  (o frontend o acessa por http://backend:8000)
+#    - db        -> postgres em localhost:5432 (o backend o acessará por host "db")
+#    - redis     -> camada de IA efêmera (host "redis", TTL 24h)
+#
+#  Cada subpasta também roda isolada:  cd backend && docker compose up
+# ============================================================
+name: projeto-financeiro-db
+
+include:
+  - db/docker-compose.yml
+  - redis/docker-compose.yml
+  - backend/docker-compose.yml
+  - frontend/docker-compose.yml

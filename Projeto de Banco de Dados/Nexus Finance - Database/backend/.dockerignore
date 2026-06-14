@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+*.pyo
+.sixth/
+.venv/
+venv/
+# .env fica de fora da imagem — injetado em runtime via env_file no compose
+.env

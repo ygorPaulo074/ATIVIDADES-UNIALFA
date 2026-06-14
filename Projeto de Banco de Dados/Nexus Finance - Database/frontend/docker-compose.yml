@@ -1,0 +1,20 @@
+# Compose AUTÔNOMO do frontend.
+# Sobe só o frontend:  cd frontend && docker compose up
+# Também é incluído pelo docker-compose.yml da raiz (orquestrador).
+services:
+  frontend:
+    build: .
+    image: pf-frontend
+    container_name: pf-frontend
+    # Dentro da rede do Docker o backend é alcançado pelo nome do serviço "backend".
+    # O proxy do Vite usa esta variável (ver vite.config.ts).
+    environment:
+      - VITE_PROXY_TARGET=http://backend:8000
+    ports:
+      - "5173:5173"
+    # Código montado para hot-reload; node_modules preservado pela imagem
+    volumes:
+      - ./:/app
+      - /app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+    restart: unless-stopped

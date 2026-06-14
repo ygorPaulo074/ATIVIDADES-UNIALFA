@@ -1,0 +1,48 @@
+# Compose AUTÔNOMO do banco de dados (PostgreSQL).
+# Sobe só o banco:  cd db && docker compose up
+# Também é incluído pelo docker-compose.yml da raiz (orquestrador).
+#
+# Os scripts .sql são EXPLÍCITOS (escritos à mão, sem ORM). O Postgres executa
+# automaticamente os arquivos montados em /docker-entrypoint-initdb.d/ na PRIMEIRA
+# inicialização do volume (ordem alfabética). Para reexecutar do zero:
+#   docker compose down -v   (apaga o volume pgdata e recria)
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: pf-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      # Init em ordem: schema (0xx) -> functions (1xx) -> seeds (2xx).
+      - ./schema.sql:/docker-entrypoint-initdb.d/001_schema.sql:ro
+      - ./functions/01_clamp_day.sql:/docker-entrypoint-initdb.d/101_clamp_day.sql:ro
+      - ./functions/02_bill_status.sql:/docker-entrypoint-initdb.d/102_bill_status.sql:ro
+      - ./functions/03_wallet_balance.sql:/docker-entrypoint-initdb.d/103_wallet_balance.sql:ro
+      - ./functions/04_pay_bill.sql:/docker-entrypoint-initdb.d/104_pay_bill.sql:ro
+      - ./functions/05_generate_installments.sql:/docker-entrypoint-initdb.d/105_generate_installments.sql:ro
+      - ./functions/06_recurrence_dates.sql:/docker-entrypoint-initdb.d/106_recurrence_dates.sql:ro
+      - ./functions/07_generate_recurrence_occurrences.sql:/docker-entrypoint-initdb.d/107_generate_recurrence_occurrences.sql:ro
+      - ./functions/08_seed_default_categories.sql:/docker-entrypoint-initdb.d/108_seed_default_categories.sql:ro
+      - ./functions/09_cash_flow.sql:/docker-entrypoint-initdb.d/109_cash_flow.sql:ro
+      - ./functions/10_trg_tags_limit.sql:/docker-entrypoint-initdb.d/110_trg_tags_limit.sql:ro
+      - ./functions/11_trg_tx_type_coherence.sql:/docker-entrypoint-initdb.d/111_trg_tx_type_coherence.sql:ro
+      - ./functions/12_trg_bill_type_coherence.sql:/docker-entrypoint-initdb.d/112_trg_bill_type_coherence.sql:ro
+      - ./functions/13_record_market_value.sql:/docker-entrypoint-initdb.d/113_record_market_value.sql:ro
+      - ./functions/14_invested_total.sql:/docker-entrypoint-initdb.d/114_invested_total.sql:ro
+      - ./functions/15_position_value.sql:/docker-entrypoint-initdb.d/115_position_value.sql:ro
+      - ./functions/16_investment_return.sql:/docker-entrypoint-initdb.d/116_investment_return.sql:ro
+      - ./seeds/01_payment_methods.sql:/docker-entrypoint-initdb.d/201_payment_methods.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pgdata:

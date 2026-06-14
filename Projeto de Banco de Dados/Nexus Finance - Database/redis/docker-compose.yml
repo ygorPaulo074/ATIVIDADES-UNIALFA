@@ -1,0 +1,12 @@
+# Compose AUTÔNOMO do Redis (camada de IA efêmera).
+# Sobe só o Redis:  cd redis && docker compose up
+# Também é incluído pelo docker-compose.yml da raiz (orquestrador).
+#
+# Sem volume: os dados são transitórios por natureza (TTL de 24h aplicado na app).
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: pf-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped

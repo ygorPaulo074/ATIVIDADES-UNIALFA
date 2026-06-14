@@ -1,0 +1,22 @@
+# Compose AUTÔNOMO do backend.
+# Sobe só o backend:  cd backend && docker compose up
+# Também é incluído pelo docker-compose.yml da raiz (orquestrador).
+services:
+  backend:
+    build: .
+    image: pf-backend
+    container_name: pf-backend
+    # Carrega GROQ_API_KEY, TAVILY_API_KEY, CORS_ORIGIN, BOT_NAME do .env local
+    env_file:
+      - .env
+    # Na stack, os serviços são alcançados pelos nomes (sobrepõem os defaults)
+    environment:
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/postgres
+    ports:
+      - "8000:8000"
+    # Monta o código para hot-reload em desenvolvimento (as libs ficam na imagem)
+    volumes:
+      - ./:/app
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    restart: unless-stopped
