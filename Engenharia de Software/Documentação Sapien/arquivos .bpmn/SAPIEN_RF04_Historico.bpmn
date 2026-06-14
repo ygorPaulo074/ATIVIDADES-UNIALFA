@@ -1,0 +1,466 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" targetNamespace="http://sapien.academic/bpmn" exporter="Camunda Modeler" exporterVersion="5.47.0">
+  <collaboration id="Collaboration_historico">
+    <participant id="Participant_historico" name="PÁGINA DE HISTÓRICO ACADÊMICO - SAPIEN" processRef="proc_historico" />
+  </collaboration>
+  <process id="proc_historico" name="RF04 - Historico Academico" isExecutable="false">
+    <laneSet id="ls1">
+      <lane id="lane_backend" name="Backend / API">
+        <flowNodeRef>task_recebe_req_pdf</flowNodeRef>
+        <flowNodeRef>task_gera_pdf_assinado</flowNodeRef>
+        <flowNodeRef>gw_pdf_gerado</flowNodeRef>
+        <flowNodeRef>task_recebe_req</flowNodeRef>
+        <flowNodeRef>gw_permissao</flowNodeRef>
+        <flowNodeRef>task_ret403</flowNodeRef>
+        <flowNodeRef>task_busca_historico</flowNodeRef>
+        <flowNodeRef>gw_tem_dados</flowNodeRef>
+        <flowNodeRef>task_ret_sem_dados</flowNodeRef>
+        <flowNodeRef>task_calcula_cra</flowNodeRef>
+        <flowNodeRef>task_retorna_historico</flowNodeRef>
+        <flowNodeRef>task_retorna_pdf</flowNodeRef>
+      </lane>
+      <lane id="lane_frontend" name="Frontend">
+        <flowNodeRef>end_pdf_erro</flowNodeRef>
+        <flowNodeRef>task_exibe_403</flowNodeRef>
+        <flowNodeRef>end_sem_permissao</flowNodeRef>
+        <flowNodeRef>end_sem_historico</flowNodeRef>
+        <flowNodeRef>task_exibe_sem_dados</flowNodeRef>
+        <flowNodeRef>task_envia_req</flowNodeRef>
+        <flowNodeRef>task_renderiza</flowNodeRef>
+        <flowNodeRef>task_renderiza_historico</flowNodeRef>
+        <flowNodeRef>task_exibe_cra</flowNodeRef>
+        <flowNodeRef>end_sucesso</flowNodeRef>
+        <flowNodeRef>task_envia_req_pdf</flowNodeRef>
+        <flowNodeRef>task_retorna_erro_pdf</flowNodeRef>
+        <flowNodeRef>task_exibe_erro_pdf</flowNodeRef>
+        <flowNodeRef>task_recebe_resp_pdf</flowNodeRef>
+        <flowNodeRef>task_exibe_pdf</flowNodeRef>
+        <flowNodeRef>end_pdf_sucesso</flowNodeRef>
+      </lane>
+      <lane id="lane_usuario" name="Usuario">
+        <flowNodeRef>task_solicita_pdf</flowNodeRef>
+        <flowNodeRef>start_historico</flowNodeRef>
+      </lane>
+    </laneSet>
+    <endEvent id="end_pdf_erro" name="Erro na geracao do PDF">
+      <incoming>f_pdf_err_end</incoming>
+    </endEvent>
+    <serviceTask id="task_recebe_req_pdf" name="Recebe requisicao de PDF oficial">
+      <incoming>f_envia_pdf_backend</incoming>
+      <outgoing>f_req_gera_pdf</outgoing>
+    </serviceTask>
+    <serviceTask id="task_gera_pdf_assinado" name="Gera PDF do historico com assinatura digital institucional">
+      <incoming>f_req_gera_pdf</incoming>
+      <outgoing>f_gera_gw</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_pdf_gerado" name="PDF gerado com sucesso?">
+      <incoming>f_gera_gw</incoming>
+      <outgoing>f_gerado_sim</outgoing>
+      <outgoing>f_gerado_nao</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_recebe_req" name="Recebe requisicao do historico">
+      <incoming>f_envia_backend</incoming>
+      <outgoing>f_req_permissao</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_permissao" name="Usuario tem permissao?">
+      <incoming>f_req_permissao</incoming>
+      <outgoing>f_perm_sim</outgoing>
+      <outgoing>f_perm_nao</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_ret403" name="Retorna 403: sem permissao">
+      <incoming>f_perm_nao</incoming>
+      <outgoing>f_403_frontend</outgoing>
+    </serviceTask>
+    <serviceTask id="task_exibe_403" name="Exibe mensagem: sem permissao de acesso">
+      <incoming>f_403_frontend</incoming>
+      <outgoing>f_403_end</outgoing>
+    </serviceTask>
+    <endEvent id="end_sem_permissao" name="Acesso negado">
+      <incoming>f_403_end</incoming>
+    </endEvent>
+    <serviceTask id="task_busca_historico" name="Busca todas as disciplinas cursadas no banco">
+      <incoming>f_perm_sim</incoming>
+      <incoming>f_sem_dados_frontend</incoming>
+      <outgoing>f_busca_gw</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_tem_dados" name="Existem registros no historico?">
+      <incoming>f_busca_gw</incoming>
+      <outgoing>f_dados_sim</outgoing>
+      <outgoing>f_dados_nao</outgoing>
+      <outgoing>Flow_0y86vfg</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_ret_sem_dados" name="Retorna aviso: nenhum historico encontrado">
+      <incoming>f_dados_nao</incoming>
+      <outgoing>f_sem_dados_frontend</outgoing>
+    </serviceTask>
+    <endEvent id="end_sem_historico" name="Nenhum historico encontrado">
+      <incoming>Flow_156kfff</incoming>
+    </endEvent>
+    <serviceTask id="task_exibe_sem_dados" name="Exibe aviso: nenhum historico encontrado">
+      <incoming>Flow_0y86vfg</incoming>
+      <outgoing>Flow_156kfff</outgoing>
+    </serviceTask>
+    <serviceTask id="task_envia_req" name="Envia requisicao com ID do aluno">
+      <incoming>f_renderiza_envia</incoming>
+      <outgoing>f_envia_backend</outgoing>
+    </serviceTask>
+    <serviceTask id="task_renderiza" name="Renderiza pagina de Historico Academico">
+      <incoming>f_start_renderiza</incoming>
+      <outgoing>f_renderiza_envia</outgoing>
+    </serviceTask>
+    <userTask id="task_solicita_pdf" name="Solicita emissao do historico oficial em PDF">
+      <outgoing>f_solicita_envia_pdf</outgoing>
+    </userTask>
+    <startEvent id="start_historico" name="Acessa a pagina de Historico Academico">
+      <outgoing>f_start_renderiza</outgoing>
+    </startEvent>
+    <serviceTask id="task_calcula_cra" name="Calcula CRA do aluno">
+      <incoming>f_dados_sim</incoming>
+      <outgoing>f_calcula_retorna</outgoing>
+    </serviceTask>
+    <serviceTask id="task_retorna_historico" name="Retorna historico e CRA para o Frontend">
+      <incoming>f_calcula_retorna</incoming>
+      <outgoing>f_dados_frontend</outgoing>
+    </serviceTask>
+    <serviceTask id="task_renderiza_historico" name="Renderiza historico com disciplinas ordenadas por semestre">
+      <incoming>f_dados_frontend</incoming>
+      <outgoing>f_historico_cra</outgoing>
+    </serviceTask>
+    <serviceTask id="task_exibe_cra" name="Exibe CRA calculado">
+      <incoming>f_historico_cra</incoming>
+      <outgoing>Flow_1wb99e1</outgoing>
+    </serviceTask>
+    <endEvent id="end_sucesso" name="Historico exibido com sucesso">
+      <incoming>Flow_1wb99e1</incoming>
+    </endEvent>
+    <serviceTask id="task_envia_req_pdf" name="Envia requisicao de geracao de PDF oficial">
+      <incoming>f_solicita_envia_pdf</incoming>
+      <outgoing>f_envia_pdf_backend</outgoing>
+    </serviceTask>
+    <serviceTask id="task_retorna_erro_pdf" name="Retorna erro na geracao do PDF">
+      <incoming>f_gerado_nao</incoming>
+      <outgoing>Flow_1ayvby8</outgoing>
+    </serviceTask>
+    <serviceTask id="task_exibe_erro_pdf" name="Exibe alerta de erro na geracao do PDF">
+      <incoming>Flow_1ayvby8</incoming>
+      <outgoing>f_pdf_err_end</outgoing>
+    </serviceTask>
+    <serviceTask id="task_retorna_pdf" name="Retorna PDF para o Frontend">
+      <incoming>f_gerado_sim</incoming>
+      <outgoing>Flow_037994z</outgoing>
+    </serviceTask>
+    <serviceTask id="task_recebe_resp_pdf" name="Recebe resposta de geracao de PDF">
+      <incoming>Flow_037994z</incoming>
+      <outgoing>Flow_1dmvz1j</outgoing>
+    </serviceTask>
+    <serviceTask id="task_exibe_pdf" name="Exibe PDF oficial ao usuario">
+      <incoming>Flow_1dmvz1j</incoming>
+      <outgoing>f_pdf_end</outgoing>
+    </serviceTask>
+    <endEvent id="end_pdf_sucesso" name="Historico oficial emitido com sucesso">
+      <incoming>f_pdf_end</incoming>
+    </endEvent>
+    <sequenceFlow id="f_pdf_err_end" sourceRef="task_exibe_erro_pdf" targetRef="end_pdf_erro" />
+    <sequenceFlow id="f_envia_pdf_backend" sourceRef="task_envia_req_pdf" targetRef="task_recebe_req_pdf" />
+    <sequenceFlow id="f_req_gera_pdf" sourceRef="task_recebe_req_pdf" targetRef="task_gera_pdf_assinado" />
+    <sequenceFlow id="f_gera_gw" sourceRef="task_gera_pdf_assinado" targetRef="gw_pdf_gerado" />
+    <sequenceFlow id="f_gerado_sim" sourceRef="gw_pdf_gerado" targetRef="task_retorna_pdf" />
+    <sequenceFlow id="f_gerado_nao" sourceRef="gw_pdf_gerado" targetRef="task_retorna_erro_pdf" />
+    <sequenceFlow id="f_envia_backend" sourceRef="task_envia_req" targetRef="task_recebe_req" />
+    <sequenceFlow id="f_req_permissao" sourceRef="task_recebe_req" targetRef="gw_permissao" />
+    <sequenceFlow id="f_perm_sim" sourceRef="gw_permissao" targetRef="task_busca_historico" />
+    <sequenceFlow id="f_perm_nao" sourceRef="gw_permissao" targetRef="task_ret403" />
+    <sequenceFlow id="f_403_frontend" sourceRef="task_ret403" targetRef="task_exibe_403" />
+    <sequenceFlow id="f_403_end" sourceRef="task_exibe_403" targetRef="end_sem_permissao" />
+    <sequenceFlow id="f_sem_dados_frontend" sourceRef="task_ret_sem_dados" targetRef="task_busca_historico" />
+    <sequenceFlow id="f_busca_gw" sourceRef="task_busca_historico" targetRef="gw_tem_dados" />
+    <sequenceFlow id="f_dados_sim" sourceRef="gw_tem_dados" targetRef="task_calcula_cra" />
+    <sequenceFlow id="f_dados_nao" sourceRef="gw_tem_dados" targetRef="task_ret_sem_dados" />
+    <sequenceFlow id="Flow_0y86vfg" sourceRef="gw_tem_dados" targetRef="task_exibe_sem_dados" />
+    <sequenceFlow id="Flow_156kfff" sourceRef="task_exibe_sem_dados" targetRef="end_sem_historico" />
+    <sequenceFlow id="f_renderiza_envia" sourceRef="task_renderiza" targetRef="task_envia_req" />
+    <sequenceFlow id="f_start_renderiza" sourceRef="start_historico" targetRef="task_renderiza" />
+    <sequenceFlow id="f_solicita_envia_pdf" sourceRef="task_solicita_pdf" targetRef="task_envia_req_pdf" />
+    <sequenceFlow id="f_calcula_retorna" sourceRef="task_calcula_cra" targetRef="task_retorna_historico" />
+    <sequenceFlow id="f_dados_frontend" sourceRef="task_retorna_historico" targetRef="task_renderiza_historico" />
+    <sequenceFlow id="f_historico_cra" sourceRef="task_renderiza_historico" targetRef="task_exibe_cra" />
+    <sequenceFlow id="Flow_1wb99e1" sourceRef="task_exibe_cra" targetRef="end_sucesso" />
+    <sequenceFlow id="Flow_1ayvby8" sourceRef="task_retorna_erro_pdf" targetRef="task_exibe_erro_pdf" />
+    <sequenceFlow id="Flow_037994z" sourceRef="task_retorna_pdf" targetRef="task_recebe_resp_pdf" />
+    <sequenceFlow id="Flow_1dmvz1j" sourceRef="task_recebe_resp_pdf" targetRef="task_exibe_pdf" />
+    <sequenceFlow id="f_pdf_end" sourceRef="task_exibe_pdf" targetRef="end_pdf_sucesso" />
+  </process>
+  <bpmndi:BPMNDiagram id="diag_historico">
+    <bpmndi:BPMNPlane id="plane_historico" bpmnElement="Collaboration_historico">
+      <bpmndi:BPMNShape id="Participant_historico_di" bpmnElement="Participant_historico" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="2920" height="820" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_b" bpmnElement="lane_backend" isHorizontal="true">
+        <dc:Bounds x="210" y="590" width="2850" height="310" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_f" bpmnElement="lane_frontend" isHorizontal="true">
+        <dc:Bounds x="210" y="280" width="2850" height="310" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_u" bpmnElement="lane_usuario" isHorizontal="true">
+        <dc:Bounds x="210" y="80" width="2850" height="200" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_pdf_erro" bpmnElement="end_pdf_erro">
+        <dc:Bounds x="2632" y="382" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2611" y="424" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_recebe_pdf" bpmnElement="task_recebe_req_pdf">
+        <dc:Bounds x="1940" y="680" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gera_pdf" bpmnElement="task_gera_pdf_assinado">
+        <dc:Bounds x="2160" y="680" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_pdf" bpmnElement="gw_pdf_gerado" isMarkerVisible="true">
+        <dc:Bounds x="2386" y="686" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2363" y="740" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_recebe_req" bpmnElement="task_recebe_req">
+        <dc:Bounds x="600" y="710" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_perm" bpmnElement="gw_permissao" isMarkerVisible="true">
+        <dc:Bounds x="821" y="716" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="815" y="770" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret403" bpmnElement="task_ret403">
+        <dc:Bounds x="770" y="610" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_403" bpmnElement="task_exibe_403">
+        <dc:Bounds x="770" y="490" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_403" bpmnElement="end_sem_permissao">
+        <dc:Bounds x="827" y="402" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="807" y="378" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_busca" bpmnElement="task_busca_historico">
+        <dc:Bounds x="960" y="710" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_dados" bpmnElement="gw_tem_dados" isMarkerVisible="true">
+        <dc:Bounds x="1196" y="716" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1177" y="678.5" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_sem_dados" bpmnElement="task_ret_sem_dados">
+        <dc:Bounds x="1140" y="820" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_sem_hist" bpmnElement="end_sem_historico">
+        <dc:Bounds x="1202" y="422" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1177" y="384.5" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_sem_dados" bpmnElement="task_exibe_sem_dados">
+        <dc:Bounds x="1140" y="480" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_envia_req" bpmnElement="task_envia_req">
+        <dc:Bounds x="600" y="370" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_renderiza" bpmnElement="task_renderiza">
+        <dc:Bounds x="365" y="370" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_solicita_pdf" bpmnElement="task_solicita_pdf">
+        <dc:Bounds x="1690" y="110" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_start" bpmnElement="start_historico">
+        <dc:Bounds x="262" y="162" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="239" y="120" width="82" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_calcula" bpmnElement="task_calcula_cra">
+        <dc:Bounds x="1350" y="710" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_retorna_hist" bpmnElement="task_retorna_historico">
+        <dc:Bounds x="1580" y="710" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_renderiza_hist" bpmnElement="task_renderiza_historico">
+        <dc:Bounds x="1580" y="480" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_cra" bpmnElement="task_exibe_cra">
+        <dc:Bounds x="1585" y="360" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_sucesso" bpmnElement="end_sucesso">
+        <dc:Bounds x="1842" y="372" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1819" y="334.5" width="81" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_envia_req_pdf" bpmnElement="task_envia_req_pdf">
+        <dc:Bounds x="1940" y="390" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_retorna_erro_pdf" bpmnElement="task_retorna_erro_pdf">
+        <dc:Bounds x="2335" y="480" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_erro_pdf" bpmnElement="task_exibe_erro_pdf">
+        <dc:Bounds x="2335" y="370" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_retorna_pdf" bpmnElement="task_retorna_pdf">
+        <dc:Bounds x="2735" y="680" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_recebe_resp_pdf" bpmnElement="task_recebe_resp_pdf">
+        <dc:Bounds x="2730" y="480" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_pdf" bpmnElement="task_exibe_pdf">
+        <dc:Bounds x="2735" y="370" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_pdf_ok" bpmnElement="end_pdf_sucesso">
+        <dc:Bounds x="3012" y="382" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2993" y="344" width="74" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="e_start_r" bpmnElement="f_start_renderiza">
+        <di:waypoint x="280" y="198" />
+        <di:waypoint x="280" y="400" />
+        <di:waypoint x="365" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_r_envia" bpmnElement="f_renderiza_envia">
+        <di:waypoint x="515" y="400" />
+        <di:waypoint x="600" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_envia_b" bpmnElement="f_envia_backend">
+        <di:waypoint x="675" y="430" />
+        <di:waypoint x="675" y="710" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_req_perm" bpmnElement="f_req_permissao">
+        <di:waypoint x="750" y="740" />
+        <di:waypoint x="821" y="740" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_perm_s" bpmnElement="f_perm_sim">
+        <di:waypoint x="869" y="740" />
+        <di:waypoint x="960" y="740" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="900" y="872" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_perm_n" bpmnElement="f_perm_nao">
+        <di:waypoint x="845" y="716" />
+        <di:waypoint x="845" y="670" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="850" y="826" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_403_f" bpmnElement="f_403_frontend">
+        <di:waypoint x="845" y="610" />
+        <di:waypoint x="845" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_403_end" bpmnElement="f_403_end">
+        <di:waypoint x="845" y="490" />
+        <di:waypoint x="845" y="438" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_busca_gw" bpmnElement="f_busca_gw">
+        <di:waypoint x="1120" y="740" />
+        <di:waypoint x="1196" y="740" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_dados_s" bpmnElement="f_dados_sim">
+        <di:waypoint x="1244" y="740" />
+        <di:waypoint x="1350" y="740" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1280" y="872" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_dados_n" bpmnElement="f_dados_nao">
+        <di:waypoint x="1220" y="764" />
+        <di:waypoint x="1220" y="820" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1231" y="950" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sd_f" bpmnElement="f_sem_dados_frontend">
+        <di:waypoint x="1140" y="850" />
+        <di:waypoint x="1040" y="850" />
+        <di:waypoint x="1040" y="770" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_calc_ret" bpmnElement="f_calcula_retorna">
+        <di:waypoint x="1510" y="740" />
+        <di:waypoint x="1580" y="740" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_ret_hist" bpmnElement="f_dados_frontend">
+        <di:waypoint x="1660" y="710" />
+        <di:waypoint x="1660" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_hist_cra" bpmnElement="f_historico_cra">
+        <di:waypoint x="1660" y="480" />
+        <di:waypoint x="1660" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sol_pdf" bpmnElement="f_solicita_envia_pdf">
+        <di:waypoint x="1850" y="140" />
+        <di:waypoint x="2020" y="140" />
+        <di:waypoint x="2020" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_envia_pdf_b" bpmnElement="f_envia_pdf_backend">
+        <di:waypoint x="2020" y="450" />
+        <di:waypoint x="2020" y="680" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_rec_gera" bpmnElement="f_req_gera_pdf">
+        <di:waypoint x="2100" y="710" />
+        <di:waypoint x="2160" y="710" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_gera_gw" bpmnElement="f_gera_gw">
+        <di:waypoint x="2320" y="710" />
+        <di:waypoint x="2386" y="710" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_pdf_s" bpmnElement="f_gerado_sim">
+        <di:waypoint x="2434" y="710" />
+        <di:waypoint x="2735" y="710" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2416" y="830" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_pdf_n" bpmnElement="f_gerado_nao">
+        <di:waypoint x="2410" y="686" />
+        <di:waypoint x="2410" y="540" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2416" y="946" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_pdf_end" bpmnElement="f_pdf_end">
+        <di:waypoint x="2885" y="400" />
+        <di:waypoint x="3012" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_err_end" bpmnElement="f_pdf_err_end">
+        <di:waypoint x="2485" y="400" />
+        <di:waypoint x="2632" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0y86vfg_di" bpmnElement="Flow_0y86vfg">
+        <di:waypoint x="1220" y="716" />
+        <di:waypoint x="1220" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_156kfff_di" bpmnElement="Flow_156kfff">
+        <di:waypoint x="1220" y="480" />
+        <di:waypoint x="1220" y="458" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1wb99e1_di" bpmnElement="Flow_1wb99e1">
+        <di:waypoint x="1735" y="390" />
+        <di:waypoint x="1842" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ayvby8_di" bpmnElement="Flow_1ayvby8">
+        <di:waypoint x="2410" y="480" />
+        <di:waypoint x="2410" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_037994z_di" bpmnElement="Flow_037994z">
+        <di:waypoint x="2810" y="680" />
+        <di:waypoint x="2810" y="540" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1dmvz1j_di" bpmnElement="Flow_1dmvz1j">
+        <di:waypoint x="2810" y="480" />
+        <di:waypoint x="2810" y="430" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

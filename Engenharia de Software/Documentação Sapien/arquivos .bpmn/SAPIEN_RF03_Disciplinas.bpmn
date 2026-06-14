@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" targetNamespace="http://sapien.academic/bpmn" exporter="Camunda Modeler" exporterVersion="5.47.0">
+  <collaboration id="Collaboration_disciplinas">
+    <participant id="Participant_disciplinas" name="PÁGINA DE DISCIPLINAS MATRICULADAS - SAPIEN" processRef="proc_disciplinas" />
+  </collaboration>
+  <process id="proc_disciplinas" name="RF03 - Disciplinas Matriculadas" isExecutable="false">
+    <laneSet id="ls1">
+      <lane id="lane_usuario" name="Usuario">
+        <flowNodeRef>start_disciplinas</flowNodeRef>
+        <flowNodeRef>task_seleciona_semestre</flowNodeRef>
+      </lane>
+      <lane id="lane_frontend" name="Frontend">
+        <flowNodeRef>task_renderiza</flowNodeRef>
+        <flowNodeRef>end_sem_permissao</flowNodeRef>
+        <flowNodeRef>task_envia_req</flowNodeRef>
+        <flowNodeRef>task_exibe_403</flowNodeRef>
+        <flowNodeRef>task_exibe_sem_dados</flowNodeRef>
+        <flowNodeRef>end_sem_disciplinas</flowNodeRef>
+        <flowNodeRef>task_renderiza_lista</flowNodeRef>
+        <flowNodeRef>task_distingue_tipos</flowNodeRef>
+        <flowNodeRef>task_exibe_creditos</flowNodeRef>
+        <flowNodeRef>end_sucesso</flowNodeRef>
+      </lane>
+      <lane id="lane_backend" name="Backend / API">
+        <flowNodeRef>task_recebe_req</flowNodeRef>
+        <flowNodeRef>gw_permissao</flowNodeRef>
+        <flowNodeRef>task_ret403</flowNodeRef>
+        <flowNodeRef>task_busca_disciplinas</flowNodeRef>
+        <flowNodeRef>gw_tem_dados</flowNodeRef>
+        <flowNodeRef>task_ret_sem_dados</flowNodeRef>
+        <flowNodeRef>task_retorna_disciplinas</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="start_disciplinas" name="Acessa a pagina de Disciplinas Matriculadas">
+      <outgoing>f_start_renderiza</outgoing>
+    </startEvent>
+    <userTask id="task_seleciona_semestre" name="Seleciona o semestre letivo">
+      <incoming>f_renderiza_seleciona</incoming>
+      <outgoing>f_seleciona_envia</outgoing>
+    </userTask>
+    <serviceTask id="task_renderiza" name="Renderiza pagina de Disciplinas">
+      <incoming>f_start_renderiza</incoming>
+      <outgoing>f_renderiza_seleciona</outgoing>
+    </serviceTask>
+    <endEvent id="end_sem_permissao" name="Acesso negado">
+      <incoming>f_403_end</incoming>
+    </endEvent>
+    <sequenceFlow id="f_start_renderiza" sourceRef="start_disciplinas" targetRef="task_renderiza" />
+    <sequenceFlow id="f_renderiza_seleciona" sourceRef="task_renderiza" targetRef="task_seleciona_semestre" />
+    <sequenceFlow id="f_seleciona_envia" sourceRef="task_seleciona_semestre" targetRef="task_envia_req" />
+    <sequenceFlow id="f_envia_backend" sourceRef="task_envia_req" targetRef="task_recebe_req" />
+    <sequenceFlow id="f_req_permissao" sourceRef="task_recebe_req" targetRef="gw_permissao" />
+    <sequenceFlow id="f_perm_sim" sourceRef="gw_permissao" targetRef="task_busca_disciplinas" />
+    <sequenceFlow id="f_perm_nao" sourceRef="gw_permissao" targetRef="task_ret403" />
+    <sequenceFlow id="f_403_frontend" sourceRef="task_ret403" targetRef="task_exibe_403" />
+    <sequenceFlow id="f_403_end" sourceRef="task_exibe_403" targetRef="end_sem_permissao" />
+    <sequenceFlow id="f_busca_gw" sourceRef="task_busca_disciplinas" targetRef="gw_tem_dados" />
+    <sequenceFlow id="f_dados_sim" sourceRef="gw_tem_dados" targetRef="task_retorna_disciplinas" />
+    <sequenceFlow id="f_dados_nao" sourceRef="gw_tem_dados" targetRef="task_ret_sem_dados" />
+    <sequenceFlow id="f_sem_dados_frontend" sourceRef="task_ret_sem_dados" targetRef="task_exibe_sem_dados" />
+    <sequenceFlow id="f_sem_dados_end" sourceRef="task_exibe_sem_dados" targetRef="end_sem_disciplinas" />
+    <sequenceFlow id="f_lista_tipos" sourceRef="task_renderiza_lista" targetRef="task_distingue_tipos" />
+    <sequenceFlow id="f_tipos_creditos" sourceRef="task_distingue_tipos" targetRef="task_exibe_creditos" />
+    <sequenceFlow id="f_creditos_end" sourceRef="task_exibe_creditos" targetRef="end_sucesso" />
+    <serviceTask id="task_envia_req" name="Envia requisicao com ID do aluno e semestre">
+      <incoming>f_seleciona_envia</incoming>
+      <outgoing>f_envia_backend</outgoing>
+    </serviceTask>
+    <serviceTask id="task_recebe_req" name="Recebe requisicao de disciplinas">
+      <incoming>f_envia_backend</incoming>
+      <outgoing>f_req_permissao</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_permissao" name="Usuario tem permissao?">
+      <incoming>f_req_permissao</incoming>
+      <outgoing>f_perm_sim</outgoing>
+      <outgoing>f_perm_nao</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_ret403" name="Retorna 403: sem permissao">
+      <incoming>f_perm_nao</incoming>
+      <outgoing>f_403_frontend</outgoing>
+    </serviceTask>
+    <serviceTask id="task_busca_disciplinas" name="Busca disciplinas matriculadas do semestre no banco">
+      <incoming>f_perm_sim</incoming>
+      <outgoing>f_busca_gw</outgoing>
+    </serviceTask>
+    <serviceTask id="task_exibe_403" name="Exibe mensagem: sem permissao de acesso">
+      <incoming>f_403_frontend</incoming>
+      <outgoing>f_403_end</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_tem_dados" name="Existem disciplinas para o semestre?">
+      <incoming>f_busca_gw</incoming>
+      <outgoing>f_dados_sim</outgoing>
+      <outgoing>f_dados_nao</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_ret_sem_dados" name="Retorna aviso: nenhuma disciplina encontrada">
+      <incoming>f_dados_nao</incoming>
+      <outgoing>f_sem_dados_frontend</outgoing>
+    </serviceTask>
+    <serviceTask id="task_exibe_sem_dados" name="Exibe aviso: nenhuma disciplina encontrada para o semestre">
+      <incoming>f_sem_dados_frontend</incoming>
+      <outgoing>f_sem_dados_end</outgoing>
+    </serviceTask>
+    <endEvent id="end_sem_disciplinas" name="Nenhuma disciplina encontrada">
+      <incoming>f_sem_dados_end</incoming>
+    </endEvent>
+    <serviceTask id="task_retorna_disciplinas" name="Retorna lista de disciplinas para o Frontend">
+      <incoming>f_dados_sim</incoming>
+      <outgoing>Flow_1rm76z3</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_1rm76z3" sourceRef="task_retorna_disciplinas" targetRef="task_renderiza_lista" />
+    <serviceTask id="task_renderiza_lista" name="Renderiza lista de disciplinas com nome, codigo, professor, horario, sala e carga horaria">
+      <incoming>Flow_1rm76z3</incoming>
+      <outgoing>f_lista_tipos</outgoing>
+    </serviceTask>
+    <serviceTask id="task_distingue_tipos" name="Distingue visualmente disciplinas obrigatorias e optativas">
+      <incoming>f_lista_tipos</incoming>
+      <outgoing>f_tipos_creditos</outgoing>
+    </serviceTask>
+    <serviceTask id="task_exibe_creditos" name="Exibe total de creditos do semestre no rodape">
+      <incoming>f_tipos_creditos</incoming>
+      <outgoing>f_creditos_end</outgoing>
+    </serviceTask>
+    <endEvent id="end_sucesso" name="Disciplinas exibidas com sucesso">
+      <incoming>f_creditos_end</incoming>
+    </endEvent>
+  </process>
+  <bpmndi:BPMNDiagram id="diag_disciplinas">
+    <bpmndi:BPMNPlane id="plane_disciplinas" bpmnElement="Collaboration_disciplinas">
+      <bpmndi:BPMNShape id="Participant_disciplinas_di" bpmnElement="Participant_disciplinas" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="2240" height="1000" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_b" bpmnElement="lane_backend" isHorizontal="true">
+        <dc:Bounds x="210" y="720" width="2170" height="360" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_f" bpmnElement="lane_frontend" isHorizontal="true">
+        <dc:Bounds x="210" y="330" width="2170" height="390" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_u" bpmnElement="lane_usuario" isHorizontal="true">
+        <dc:Bounds x="210" y="80" width="2170" height="250" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_start" bpmnElement="start_disciplinas">
+        <dc:Bounds x="262" y="162" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="237" y="120" width="86" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_seleciona" bpmnElement="task_seleciona_semestre">
+        <dc:Bounds x="530" y="150" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_renderiza" bpmnElement="task_renderiza">
+        <dc:Bounds x="365" y="370" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_403" bpmnElement="end_sem_permissao">
+        <dc:Bounds x="1202" y="592" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1183" y="634" width="74" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_envia_req" bpmnElement="task_envia_req">
+        <dc:Bounds x="700" y="380" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_recebe_req" bpmnElement="task_recebe_req">
+        <dc:Bounds x="700" y="860" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_perm" bpmnElement="gw_permissao" isMarkerVisible="true">
+        <dc:Bounds x="921" y="866" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="915" y="920" width="60" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret403" bpmnElement="task_ret403">
+        <dc:Bounds x="870" y="740" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_busca" bpmnElement="task_busca_disciplinas">
+        <dc:Bounds x="1080" y="860" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_403" bpmnElement="task_exibe_403">
+        <dc:Bounds x="960" y="580" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_dados" bpmnElement="gw_tem_dados" isMarkerVisible="true">
+        <dc:Bounds x="1326" y="866" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1383.5" y="870" width="85" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_sem_dados" bpmnElement="task_ret_sem_dados">
+        <dc:Bounds x="1270" y="980" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_sem_dados" bpmnElement="task_exibe_sem_dados">
+        <dc:Bounds x="1570" y="580" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_sem_disc" bpmnElement="end_sem_disciplinas">
+        <dc:Bounds x="1842" y="592" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1832" y="634" width="56" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_retorna_disc" bpmnElement="task_retorna_disciplinas">
+        <dc:Bounds x="1270" y="740" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_renderiza_lista" bpmnElement="task_renderiza_lista">
+        <dc:Bounds x="1270" y="540" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_distingue" bpmnElement="task_distingue_tipos">
+        <dc:Bounds x="1270" y="400" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_creditos" bpmnElement="task_exibe_creditos">
+        <dc:Bounds x="1500" y="400" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_sucesso" bpmnElement="end_sucesso">
+        <dc:Bounds x="1742" y="412" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1728" y="454" width="65" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="e_start_r" bpmnElement="f_start_renderiza">
+        <di:waypoint x="280" y="198" />
+        <di:waypoint x="280" y="400" />
+        <di:waypoint x="365" y="400" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_r_sel" bpmnElement="f_renderiza_seleciona">
+        <di:waypoint x="440" y="370" />
+        <di:waypoint x="440" y="180" />
+        <di:waypoint x="530" y="180" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sel_envia" bpmnElement="f_seleciona_envia">
+        <di:waypoint x="690" y="180" />
+        <di:waypoint x="775" y="180" />
+        <di:waypoint x="775" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_envia_b" bpmnElement="f_envia_backend">
+        <di:waypoint x="775" y="440" />
+        <di:waypoint x="775" y="860" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_req_perm" bpmnElement="f_req_permissao">
+        <di:waypoint x="850" y="890" />
+        <di:waypoint x="921" y="890" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_perm_s" bpmnElement="f_perm_sim">
+        <di:waypoint x="969" y="890" />
+        <di:waypoint x="1080" y="890" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1000" y="822" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_perm_n" bpmnElement="f_perm_nao">
+        <di:waypoint x="945" y="866" />
+        <di:waypoint x="945" y="800" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="951" y="896" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_403_f" bpmnElement="f_403_frontend">
+        <di:waypoint x="945" y="740" />
+        <di:waypoint x="945" y="690" />
+        <di:waypoint x="1040" y="690" />
+        <di:waypoint x="1040" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_403_end" bpmnElement="f_403_end">
+        <di:waypoint x="1120" y="610" />
+        <di:waypoint x="1202" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_busca_gw" bpmnElement="f_busca_gw">
+        <di:waypoint x="1240" y="890" />
+        <di:waypoint x="1326" y="890" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_dados_s" bpmnElement="f_dados_sim">
+        <di:waypoint x="1350" y="866" />
+        <di:waypoint x="1350" y="800" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1360" y="822" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_dados_n" bpmnElement="f_dados_nao">
+        <di:waypoint x="1350" y="914" />
+        <di:waypoint x="1350" y="980" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1321" y="896" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sd_f" bpmnElement="f_sem_dados_frontend">
+        <di:waypoint x="1430" y="1010" />
+        <di:waypoint x="1650" y="1010" />
+        <di:waypoint x="1650" y="640" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sd_end" bpmnElement="f_sem_dados_end">
+        <di:waypoint x="1730" y="610" />
+        <di:waypoint x="1842" y="610" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_lista_tipos" bpmnElement="f_lista_tipos">
+        <di:waypoint x="1350" y="540" />
+        <di:waypoint x="1350" y="460" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_tipos_cred" bpmnElement="f_tipos_creditos">
+        <di:waypoint x="1430" y="430" />
+        <di:waypoint x="1500" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cred_end" bpmnElement="f_creditos_end">
+        <di:waypoint x="1660" y="430" />
+        <di:waypoint x="1742" y="430" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1rm76z3_di" bpmnElement="Flow_1rm76z3">
+        <di:waypoint x="1350" y="740" />
+        <di:waypoint x="1350" y="600" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

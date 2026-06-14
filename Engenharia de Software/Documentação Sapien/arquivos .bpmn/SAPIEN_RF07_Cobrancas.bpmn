@@ -1,0 +1,608 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" targetNamespace="http://sapien.academic/bpmn" exporter="Camunda Modeler" exporterVersion="5.47.0">
+  <collaboration id="Collaboration_cobrancas">
+    <participant id="Participant_cobrancas" name="PÁGINA DE COBRANÇAS - SAPIEN" processRef="proc_cobrancas" />
+  </collaboration>
+  <process id="proc_cobrancas" name="RF07 - Cobrancas" isExecutable="false">
+    <laneSet id="ls1">
+      <lane id="lane_frontend" name="Frontend">
+        <flowNodeRef>task_renderiza</flowNodeRef>
+        <flowNodeRef>task_envia_req_cobrancas</flowNodeRef>
+        <flowNodeRef>task_envia_req_pagamento</flowNodeRef>
+        <flowNodeRef>task_exibe_lista</flowNodeRef>
+        <flowNodeRef>end_sem_cobrancas</flowNodeRef>
+        <flowNodeRef>task_exibe_sem_cobrancas</flowNodeRef>
+        <flowNodeRef>task_recebe_resp_pix</flowNodeRef>
+        <flowNodeRef>gw_pix_ok</flowNodeRef>
+        <flowNodeRef>task_exibe_pix</flowNodeRef>
+        <flowNodeRef>task_exibe_erro_pix</flowNodeRef>
+        <flowNodeRef>end_pix_erro</flowNodeRef>
+        <flowNodeRef>end_pix_sucesso</flowNodeRef>
+        <flowNodeRef>end_boleto_erro</flowNodeRef>
+        <flowNodeRef>end_boleto_sucesso</flowNodeRef>
+        <flowNodeRef>task_exibe_erro_boleto</flowNodeRef>
+        <flowNodeRef>task_exibe_boleto</flowNodeRef>
+        <flowNodeRef>gw_boleto_ok</flowNodeRef>
+        <flowNodeRef>task_recebe_resp_boleto</flowNodeRef>
+        <flowNodeRef>gw_forma_pagamento</flowNodeRef>
+      </lane>
+      <lane id="lane_usuario" name="Usuario">
+        <flowNodeRef>start_cobrancas</flowNodeRef>
+        <flowNodeRef>task_seleciona_debito</flowNodeRef>
+        <flowNodeRef>task_escolhe_forma</flowNodeRef>
+      </lane>
+      <lane id="lane_backend" name="Backend / API">
+        <flowNodeRef>task_recebe_req_cobrancas</flowNodeRef>
+        <flowNodeRef>task_busca_cobrancas</flowNodeRef>
+        <flowNodeRef>gw_tem_cobrancas</flowNodeRef>
+        <flowNodeRef>task_retorna_cobrancas</flowNodeRef>
+        <flowNodeRef>task_ret_sem_cobrancas</flowNodeRef>
+        <flowNodeRef>task_recebe_req_pagamento</flowNodeRef>
+        <flowNodeRef>gw_tipo_pagamento</flowNodeRef>
+        <flowNodeRef>task_gera_pix</flowNodeRef>
+        <flowNodeRef>task_gera_boleto</flowNodeRef>
+        <flowNodeRef>gw_boleto_gerado</flowNodeRef>
+        <flowNodeRef>gw_pix_gerado</flowNodeRef>
+        <flowNodeRef>task_retorna_pix</flowNodeRef>
+        <flowNodeRef>task_retorna_boleto</flowNodeRef>
+        <flowNodeRef>task_retorna_erro_pix</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="start_cobrancas" name="Acessa a pagina de Cobrancas">
+      <outgoing>f_start_renderiza</outgoing>
+    </startEvent>
+    <serviceTask id="task_renderiza" name="Renderiza pagina de Cobrancas">
+      <incoming>f_start_renderiza</incoming>
+      <outgoing>f_renderiza_envia</outgoing>
+    </serviceTask>
+    <serviceTask id="task_envia_req_cobrancas" name="Envia requisicao de cobrancas do aluno">
+      <incoming>f_renderiza_envia</incoming>
+      <outgoing>f_envia_backend</outgoing>
+    </serviceTask>
+    <serviceTask id="task_envia_req_pagamento" name="Envia requisicao de pagamento com forma escolhida">
+      <incoming>f_forma_envia</incoming>
+      <outgoing>f_pag_backend</outgoing>
+    </serviceTask>
+    <serviceTask id="task_recebe_req_cobrancas" name="Recebe requisicao de cobrancas">
+      <incoming>f_envia_backend</incoming>
+      <outgoing>f_req_busca</outgoing>
+    </serviceTask>
+    <serviceTask id="task_busca_cobrancas" name="Busca cobrancas do aluno no banco">
+      <incoming>f_req_busca</incoming>
+      <outgoing>f_busca_gw</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_tem_cobrancas" name="Existem cobrancas para o aluno?">
+      <incoming>f_busca_gw</incoming>
+      <outgoing>f_cob_sim</outgoing>
+      <outgoing>f_cob_nao</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_retorna_cobrancas" name="Retorna lista de cobrancas com status atualizado">
+      <incoming>f_cob_sim</incoming>
+      <outgoing>f_cobrancas_frontend</outgoing>
+    </serviceTask>
+    <serviceTask id="task_ret_sem_cobrancas" name="Retorna aviso: nenhuma cobranca encontrada">
+      <incoming>f_cob_nao</incoming>
+      <outgoing>f_sem_cob_frontend</outgoing>
+    </serviceTask>
+    <serviceTask id="task_exibe_lista" name="Exibe lista de cobrancas com status visual (Pago, Pendente, Vencido)">
+      <incoming>f_cobrancas_frontend</incoming>
+      <outgoing>f_lista_usuario</outgoing>
+    </serviceTask>
+    <endEvent id="end_sem_cobrancas" name="Nenhuma cobranca encontrada">
+      <incoming>f_sem_cob_end</incoming>
+    </endEvent>
+    <serviceTask id="task_exibe_sem_cobrancas" name="Exibe aviso: nenhuma cobranca encontrada">
+      <incoming>f_sem_cob_frontend</incoming>
+      <outgoing>f_sem_cob_end</outgoing>
+    </serviceTask>
+    <sequenceFlow id="f_start_renderiza" sourceRef="start_cobrancas" targetRef="task_renderiza" />
+    <sequenceFlow id="f_renderiza_envia" sourceRef="task_renderiza" targetRef="task_envia_req_cobrancas" />
+    <sequenceFlow id="f_envia_backend" sourceRef="task_envia_req_cobrancas" targetRef="task_recebe_req_cobrancas" />
+    <sequenceFlow id="f_forma_envia" sourceRef="task_escolhe_forma" targetRef="task_envia_req_pagamento" />
+    <sequenceFlow id="f_pag_backend" sourceRef="task_envia_req_pagamento" targetRef="task_recebe_req_pagamento" />
+    <sequenceFlow id="f_recebe_gw_boleto" sourceRef="task_recebe_resp_boleto" targetRef="gw_boleto_ok" />
+    <sequenceFlow id="f_boleto_err" sourceRef="gw_boleto_ok" targetRef="task_exibe_erro_boleto" />
+    <sequenceFlow id="f_boleto_end" sourceRef="task_exibe_boleto" targetRef="end_boleto_sucesso" />
+    <sequenceFlow id="f_boleto_err_end" sourceRef="task_exibe_erro_boleto" targetRef="end_boleto_erro" />
+    <sequenceFlow id="f_req_busca" sourceRef="task_recebe_req_cobrancas" targetRef="task_busca_cobrancas" />
+    <sequenceFlow id="f_busca_gw" sourceRef="task_busca_cobrancas" targetRef="gw_tem_cobrancas" />
+    <sequenceFlow id="f_cob_sim" sourceRef="gw_tem_cobrancas" targetRef="task_retorna_cobrancas" />
+    <sequenceFlow id="f_cob_nao" sourceRef="gw_tem_cobrancas" targetRef="task_ret_sem_cobrancas" />
+    <sequenceFlow id="f_cobrancas_frontend" sourceRef="task_retorna_cobrancas" targetRef="task_exibe_lista" />
+    <sequenceFlow id="f_pag_gw_tipo" sourceRef="task_recebe_req_pagamento" targetRef="gw_tipo_pagamento" />
+    <sequenceFlow id="f_tipo_boleto" sourceRef="gw_tipo_pagamento" targetRef="task_gera_boleto" />
+    <sequenceFlow id="f_tipo_pix" sourceRef="gw_tipo_pagamento" targetRef="task_gera_pix" />
+    <sequenceFlow id="f_gera_gw_boleto" sourceRef="task_gera_boleto" targetRef="gw_boleto_gerado" />
+    <sequenceFlow id="f_bg_sim" sourceRef="gw_boleto_gerado" targetRef="task_retorna_boleto" />
+    <sequenceFlow id="f_pg_nao" sourceRef="gw_pix_gerado" targetRef="task_gera_pix" />
+    <sequenceFlow id="f_sem_cob_frontend" sourceRef="task_ret_sem_cobrancas" targetRef="task_exibe_sem_cobrancas" />
+    <sequenceFlow id="f_lista_usuario" sourceRef="task_exibe_lista" targetRef="task_seleciona_debito" />
+    <sequenceFlow id="f_sem_cob_end" sourceRef="task_exibe_sem_cobrancas" targetRef="end_sem_cobrancas" />
+    <sequenceFlow id="f_seleciona_forma" sourceRef="task_seleciona_debito" targetRef="task_escolhe_forma" />
+    <userTask id="task_seleciona_debito" name="Seleciona debito para pagar">
+      <incoming>f_lista_usuario</incoming>
+      <outgoing>f_seleciona_forma</outgoing>
+    </userTask>
+    <userTask id="task_escolhe_forma" name="Escolhe forma de pagamento (Boleto ou PIX)">
+      <incoming>f_seleciona_forma</incoming>
+      <outgoing>f_forma_envia</outgoing>
+    </userTask>
+    <serviceTask id="task_recebe_req_pagamento" name="Recebe requisicao de pagamento">
+      <incoming>f_pag_backend</incoming>
+      <outgoing>f_pag_gw_tipo</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_15lk3n7" sourceRef="task_gera_pix" targetRef="gw_pix_gerado" />
+    <exclusiveGateway id="gw_tipo_pagamento" name="Tipo de pagamento?">
+      <incoming>f_pag_gw_tipo</incoming>
+      <outgoing>f_tipo_boleto</outgoing>
+      <outgoing>f_tipo_pix</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_gera_pix" name="Gera QR Code PIX dinamicamente">
+      <incoming>f_tipo_pix</incoming>
+      <incoming>f_pg_nao</incoming>
+      <outgoing>Flow_15lk3n7</outgoing>
+    </serviceTask>
+    <serviceTask id="task_gera_boleto" name="Gera boleto atualizado">
+      <incoming>f_tipo_boleto</incoming>
+      <outgoing>f_gera_gw_boleto</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_boleto_gerado" name="Boleto gerado?">
+      <incoming>f_gera_gw_boleto</incoming>
+      <outgoing>f_bg_sim</outgoing>
+      <outgoing>Flow_1iokf9x</outgoing>
+    </exclusiveGateway>
+    <exclusiveGateway id="gw_pix_gerado" name="PIX gerado?">
+      <incoming>Flow_15lk3n7</incoming>
+      <outgoing>f_pg_nao</outgoing>
+      <outgoing>Flow_0mjq4sq</outgoing>
+      <outgoing>Flow_00zn4nd</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_retorna_pix" name="Retorna QR Code PIX para o Frontend">
+      <incoming>Flow_00zn4nd</incoming>
+      <outgoing>Flow_1gmkpsv</outgoing>
+    </serviceTask>
+    <serviceTask id="task_retorna_boleto" name="Retorna boleto para o Frontend">
+      <incoming>f_bg_sim</incoming>
+      <outgoing>Flow_00osrw6</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_1iokf9x" sourceRef="gw_boleto_gerado" targetRef="task_retorna_erro_pix" />
+    <sequenceFlow id="Flow_0mjq4sq" sourceRef="gw_pix_gerado" targetRef="task_retorna_erro_pix" />
+    <sequenceFlow id="Flow_00zn4nd" sourceRef="gw_pix_gerado" targetRef="task_retorna_pix" />
+    <serviceTask id="task_retorna_erro_pix" name="Retorna erro na geracao do pagamento">
+      <incoming>Flow_1iokf9x</incoming>
+      <incoming>Flow_0mjq4sq</incoming>
+      <outgoing>Flow_1yq62ms</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_00osrw6" sourceRef="task_retorna_boleto" targetRef="gw_forma_pagamento" />
+    <sequenceFlow id="Flow_1yq62ms" sourceRef="task_retorna_erro_pix" targetRef="gw_forma_pagamento" />
+    <sequenceFlow id="Flow_1gmkpsv" sourceRef="task_retorna_pix" targetRef="gw_forma_pagamento" />
+    <serviceTask id="task_recebe_resp_pix" name="Recebe resposta de geracao de PIX">
+      <incoming>Flow_0b3kmz2</incoming>
+      <outgoing>f_recebe_gw_pix</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_pix_ok" name="PIX gerado com sucesso?">
+      <incoming>f_recebe_gw_pix</incoming>
+      <outgoing>f_pix_ok</outgoing>
+      <outgoing>f_pix_err</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_exibe_pix" name="Exibe QR Code PIX para pagamento">
+      <incoming>f_pix_ok</incoming>
+      <outgoing>f_pix_end</outgoing>
+    </serviceTask>
+    <serviceTask id="task_exibe_erro_pix" name="Exibe erro na geracao do PIX">
+      <incoming>f_pix_err</incoming>
+      <outgoing>f_pix_err_end</outgoing>
+    </serviceTask>
+    <endEvent id="end_pix_erro" name="Erro na geracao do PIX">
+      <incoming>f_pix_err_end</incoming>
+    </endEvent>
+    <endEvent id="end_pix_sucesso" name="PIX gerado com sucesso">
+      <incoming>f_pix_end</incoming>
+    </endEvent>
+    <sequenceFlow id="f_recebe_gw_pix" sourceRef="task_recebe_resp_pix" targetRef="gw_pix_ok" />
+    <sequenceFlow id="f_pix_ok" sourceRef="gw_pix_ok" targetRef="task_exibe_pix" />
+    <sequenceFlow id="f_pix_err" sourceRef="gw_pix_ok" targetRef="task_exibe_erro_pix" />
+    <sequenceFlow id="f_pix_end" sourceRef="task_exibe_pix" targetRef="end_pix_sucesso" />
+    <sequenceFlow id="f_pix_err_end" sourceRef="task_exibe_erro_pix" targetRef="end_pix_erro" />
+    <endEvent id="end_boleto_erro" name="Erro na geracao do boleto">
+      <incoming>f_boleto_err_end</incoming>
+    </endEvent>
+    <endEvent id="end_boleto_sucesso" name="Boleto gerado com sucesso">
+      <incoming>f_boleto_end</incoming>
+    </endEvent>
+    <serviceTask id="task_exibe_erro_boleto" name="Exibe erro na geracao do boleto">
+      <incoming>f_boleto_err</incoming>
+      <outgoing>f_boleto_err_end</outgoing>
+    </serviceTask>
+    <serviceTask id="task_exibe_boleto" name="Exibe boleto para download">
+      <incoming>Flow_141fu5y</incoming>
+      <outgoing>f_boleto_end</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_boleto_ok" name="Boleto gerado com sucesso?">
+      <incoming>f_recebe_gw_boleto</incoming>
+      <outgoing>f_boleto_err</outgoing>
+      <outgoing>Flow_141fu5y</outgoing>
+    </exclusiveGateway>
+    <sequenceFlow id="Flow_141fu5y" sourceRef="gw_boleto_ok" targetRef="task_exibe_boleto" />
+    <serviceTask id="task_recebe_resp_boleto" name="Recebe resposta de geracao de boleto">
+      <incoming>Flow_0e0u5zl</incoming>
+      <outgoing>f_recebe_gw_boleto</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_0e0u5zl" sourceRef="gw_forma_pagamento" targetRef="task_recebe_resp_boleto" />
+    <sequenceFlow id="Flow_0b3kmz2" sourceRef="gw_forma_pagamento" targetRef="task_recebe_resp_pix" />
+    <exclusiveGateway id="gw_forma_pagamento" name="Forma de pagamento recebida?">
+      <incoming>Flow_00osrw6</incoming>
+      <incoming>Flow_1yq62ms</incoming>
+      <incoming>Flow_1gmkpsv</incoming>
+      <outgoing>Flow_0e0u5zl</outgoing>
+      <outgoing>Flow_0b3kmz2</outgoing>
+    </exclusiveGateway>
+  </process>
+  <bpmndi:BPMNDiagram id="diag_cobrancas">
+    <bpmndi:BPMNPlane id="plane_cobrancas" bpmnElement="Collaboration_cobrancas">
+      <bpmndi:BPMNShape id="Participant_cobrancas_di" bpmnElement="Participant_cobrancas" isHorizontal="true">
+        <dc:Bounds x="155" y="75" width="2868" height="1260" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_b" bpmnElement="lane_backend" isHorizontal="true">
+        <dc:Bounds x="205" y="820" width="2798" height="515" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_f" bpmnElement="lane_frontend" isHorizontal="true">
+        <dc:Bounds x="205" y="320" width="2798" height="500" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_u" bpmnElement="lane_usuario" isHorizontal="true">
+        <dc:Bounds x="205" y="75" width="2798" height="245" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_start" bpmnElement="start_cobrancas">
+        <dc:Bounds x="257" y="172" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="234" y="130" width="82" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_renderiza" bpmnElement="task_renderiza">
+        <dc:Bounds x="360" y="415" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_envia_req" bpmnElement="task_envia_req_cobrancas">
+        <dc:Bounds x="575" y="415" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_envia_pag" bpmnElement="task_envia_req_pagamento">
+        <dc:Bounds x="1415" y="415" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_rec_req" bpmnElement="task_recebe_req_cobrancas">
+        <dc:Bounds x="575" y="995" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_busca" bpmnElement="task_busca_cobrancas">
+        <dc:Bounds x="795" y="995" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_tem" bpmnElement="gw_tem_cobrancas" isMarkerVisible="true">
+        <dc:Bounds x="1016" y="1001" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="998" y="1055" width="85" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_cob" bpmnElement="task_retorna_cobrancas">
+        <dc:Bounds x="1155" y="995" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_sem" bpmnElement="task_ret_sem_cobrancas">
+        <dc:Bounds x="960" y="915" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_lista" bpmnElement="task_exibe_lista">
+        <dc:Bounds x="1155" y="545" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_sem_cob" bpmnElement="end_sem_cobrancas">
+        <dc:Bounds x="1022" y="427" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1012" y="377" width="56" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_sem_cob" bpmnElement="task_exibe_sem_cobrancas">
+        <dc:Bounds x="960" y="545" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_seleciona" bpmnElement="task_seleciona_debito">
+        <dc:Bounds x="1155" y="160" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_escolhe" bpmnElement="task_escolhe_forma">
+        <dc:Bounds x="1415" y="160" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_rec_pag" bpmnElement="task_recebe_req_pagamento">
+        <dc:Bounds x="1415" y="1085" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_tipo" bpmnElement="gw_tipo_pagamento" isMarkerVisible="true">
+        <dc:Bounds x="1636" y="1091" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1694" y="1101" width="62" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gera_pix" bpmnElement="task_gera_pix">
+        <dc:Bounds x="1585" y="1190" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gera_boleto" bpmnElement="task_gera_boleto">
+        <dc:Bounds x="1585" y="980" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_bg" bpmnElement="gw_boleto_gerado" isMarkerVisible="true">
+        <dc:Bounds x="1806" y="986" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1852.5" y="993" width="75" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_pg" bpmnElement="gw_pix_gerado" isMarkerVisible="true">
+        <dc:Bounds x="1806" y="1196" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1864" y="1213" width="62" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_pix" bpmnElement="task_retorna_pix">
+        <dc:Bounds x="1905" y="1260" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_boleto" bpmnElement="task_retorna_boleto">
+        <dc:Bounds x="1915" y="920" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_err_pix" bpmnElement="task_retorna_erro_pix">
+        <dc:Bounds x="1905" y="1085" width="150" height="60" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_rec_pix" bpmnElement="task_recebe_resp_pix">
+        <dc:Bounds x="2340" y="670" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_pix_ok" bpmnElement="gw_pix_ok" isMarkerVisible="true">
+        <dc:Bounds x="2561" y="676" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2619" y="686" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_pix" bpmnElement="task_exibe_pix">
+        <dc:Bounds x="2690" y="595" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_err_pix" bpmnElement="task_exibe_erro_pix">
+        <dc:Bounds x="2690" y="740" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_pix_err" bpmnElement="end_pix_erro">
+        <dc:Bounds x="2887" y="752" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2866" y="794" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_pix_ok" bpmnElement="end_pix_sucesso">
+        <dc:Bounds x="2887" y="607" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2866" y="649" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_boleto_err" bpmnElement="end_boleto_erro">
+        <dc:Bounds x="2887" y="462" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2866" y="504" width="79" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_boleto_ok" bpmnElement="end_boleto_sucesso">
+        <dc:Bounds x="2882" y="337" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2866" y="379" width="69" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_err_boleto" bpmnElement="task_exibe_erro_boleto">
+        <dc:Bounds x="2690" y="450" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_boleto" bpmnElement="task_exibe_boleto">
+        <dc:Bounds x="2690" y="325" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_boleto_ok" bpmnElement="gw_boleto_ok" isMarkerVisible="true">
+        <dc:Bounds x="2561" y="396" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2618.5" y="406.5" width="71" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_rec_boleto" bpmnElement="task_recebe_resp_boleto">
+        <dc:Bounds x="2340" y="390" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_forma" bpmnElement="gw_forma_pagamento" isMarkerVisible="true">
+        <dc:Bounds x="2276" y="526" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2334" y="530" width="56" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="e_start_r" bpmnElement="f_start_renderiza">
+        <di:waypoint x="275" y="208" />
+        <di:waypoint x="275" y="445" />
+        <di:waypoint x="360" y="445" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_r_envia" bpmnElement="f_renderiza_envia">
+        <di:waypoint x="510" y="445" />
+        <di:waypoint x="575" y="445" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_envia_b" bpmnElement="f_envia_backend">
+        <di:waypoint x="650" y="475" />
+        <di:waypoint x="650" y="995" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_esc_envia" bpmnElement="f_forma_envia">
+        <di:waypoint x="1495" y="220" />
+        <di:waypoint x="1495" y="415" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_pag_b" bpmnElement="f_pag_backend">
+        <di:waypoint x="1495" y="475" />
+        <di:waypoint x="1495" y="1085" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_rb_gw" bpmnElement="f_recebe_gw_boleto">
+        <di:waypoint x="2500" y="420" />
+        <di:waypoint x="2561" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_bok_n" bpmnElement="f_boleto_err">
+        <di:waypoint x="2585" y="444" />
+        <di:waypoint x="2585" y="480" />
+        <di:waypoint x="2690" y="480" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2286" y="436" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_bol_end" bpmnElement="f_boleto_end">
+        <di:waypoint x="2840" y="355" />
+        <di:waypoint x="2882" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_bol_err_end" bpmnElement="f_boleto_err_end">
+        <di:waypoint x="2840" y="480" />
+        <di:waypoint x="2887" y="480" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_req_busca" bpmnElement="f_req_busca">
+        <di:waypoint x="725" y="1025" />
+        <di:waypoint x="795" y="1025" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_busca_gw" bpmnElement="f_busca_gw">
+        <di:waypoint x="945" y="1025" />
+        <di:waypoint x="1016" y="1025" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cob_s" bpmnElement="f_cob_sim">
+        <di:waypoint x="1064" y="1025" />
+        <di:waypoint x="1155" y="1025" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1100" y="1012" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cob_n" bpmnElement="f_cob_nao">
+        <di:waypoint x="1040" y="1001" />
+        <di:waypoint x="1040" y="975" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="950" y="1090" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cob_f" bpmnElement="f_cobrancas_frontend">
+        <di:waypoint x="1235" y="995" />
+        <di:waypoint x="1235" y="605" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_pag_tipo" bpmnElement="f_pag_gw_tipo">
+        <di:waypoint x="1575" y="1115" />
+        <di:waypoint x="1636" y="1115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_tipo_b" bpmnElement="f_tipo_boleto">
+        <di:waypoint x="1660" y="1091" />
+        <di:waypoint x="1660" y="1040" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1720" y="982" width="40" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_tipo_p" bpmnElement="f_tipo_pix">
+        <di:waypoint x="1660" y="1139" />
+        <di:waypoint x="1660" y="1190" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1720" y="1080" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_gb_gw" bpmnElement="f_gera_gw_boleto">
+        <di:waypoint x="1735" y="1010" />
+        <di:waypoint x="1806" y="1010" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_bg_s" bpmnElement="f_bg_sim">
+        <di:waypoint x="1830" y="986" />
+        <di:waypoint x="1830" y="950" />
+        <di:waypoint x="1915" y="950" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2076" y="932" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_pg_n" bpmnElement="f_pg_nao">
+        <di:waypoint x="1806" y="1220" />
+        <di:waypoint x="1735" y="1220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2076" y="1190" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sem_f" bpmnElement="f_sem_cob_frontend">
+        <di:waypoint x="1040" y="915" />
+        <di:waypoint x="1040" y="605" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_lista_u" bpmnElement="f_lista_usuario">
+        <di:waypoint x="1235" y="545" />
+        <di:waypoint x="1235" y="220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sem_end" bpmnElement="f_sem_cob_end">
+        <di:waypoint x="1040" y="545" />
+        <di:waypoint x="1040" y="463" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sel_esc" bpmnElement="f_seleciona_forma">
+        <di:waypoint x="1315" y="190" />
+        <di:waypoint x="1415" y="190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_15lk3n7_di" bpmnElement="Flow_15lk3n7">
+        <di:waypoint x="1735" y="1220" />
+        <di:waypoint x="1806" y="1220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1iokf9x_di" bpmnElement="Flow_1iokf9x">
+        <di:waypoint x="1830" y="1034" />
+        <di:waypoint x="1830" y="1115" />
+        <di:waypoint x="1905" y="1115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0mjq4sq_di" bpmnElement="Flow_0mjq4sq">
+        <di:waypoint x="1830" y="1196" />
+        <di:waypoint x="1830" y="1115" />
+        <di:waypoint x="1905" y="1115" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_00zn4nd_di" bpmnElement="Flow_00zn4nd">
+        <di:waypoint x="1830" y="1244" />
+        <di:waypoint x="1830" y="1290" />
+        <di:waypoint x="1905" y="1290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_00osrw6_di" bpmnElement="Flow_00osrw6">
+        <di:waypoint x="2065" y="950" />
+        <di:waypoint x="2210" y="950" />
+        <di:waypoint x="2210" y="550" />
+        <di:waypoint x="2276" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1yq62ms_di" bpmnElement="Flow_1yq62ms">
+        <di:waypoint x="2055" y="1115" />
+        <di:waypoint x="2210" y="1115" />
+        <di:waypoint x="2210" y="550" />
+        <di:waypoint x="2276" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1gmkpsv_di" bpmnElement="Flow_1gmkpsv">
+        <di:waypoint x="2055" y="1290" />
+        <di:waypoint x="2210" y="1290" />
+        <di:waypoint x="2210" y="550" />
+        <di:waypoint x="2276" y="550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_rp_gw" bpmnElement="f_recebe_gw_pix">
+        <di:waypoint x="2500" y="700" />
+        <di:waypoint x="2561" y="700" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_pok_s" bpmnElement="f_pix_ok">
+        <di:waypoint x="2585" y="676" />
+        <di:waypoint x="2585" y="625" />
+        <di:waypoint x="2690" y="625" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2286" y="552" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_pok_n" bpmnElement="f_pix_err">
+        <di:waypoint x="2585" y="724" />
+        <di:waypoint x="2585" y="770" />
+        <di:waypoint x="2690" y="770" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2286" y="630" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_pix_end" bpmnElement="f_pix_end">
+        <di:waypoint x="2840" y="625" />
+        <di:waypoint x="2887" y="625" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_pix_err_end" bpmnElement="f_pix_err_end">
+        <di:waypoint x="2840" y="770" />
+        <di:waypoint x="2887" y="770" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_141fu5y_di" bpmnElement="Flow_141fu5y">
+        <di:waypoint x="2585" y="396" />
+        <di:waypoint x="2585" y="355" />
+        <di:waypoint x="2690" y="355" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0e0u5zl_di" bpmnElement="Flow_0e0u5zl">
+        <di:waypoint x="2300" y="526" />
+        <di:waypoint x="2300" y="420" />
+        <di:waypoint x="2340" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0b3kmz2_di" bpmnElement="Flow_0b3kmz2">
+        <di:waypoint x="2300" y="574" />
+        <di:waypoint x="2300" y="700" />
+        <di:waypoint x="2340" y="700" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

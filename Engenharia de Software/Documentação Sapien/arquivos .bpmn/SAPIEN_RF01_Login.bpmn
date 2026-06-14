@@ -1,0 +1,611 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" targetNamespace="http://sapien.academic/bpmn" exporter="Camunda Modeler" exporterVersion="5.47.0">
+  <collaboration id="Collaboration_0vo0t9b">
+    <participant id="Participant_19xuwdb" name="PÁGINA DE LOGIN - SAPIEN" processRef="proc_login" />
+  </collaboration>
+  <process id="proc_login" name="RF01 - Login e Autenticacao SAPIEN" isExecutable="false">
+    <laneSet id="ls1">
+      <lane id="lane_backend" name="Backend / API">
+        <flowNodeRef>gw_existe</flowNodeRef>
+        <flowNodeRef>gw_liberada</flowNodeRef>
+        <flowNodeRef>gw_bloqueada</flowNodeRef>
+        <flowNodeRef>task_ativa_bloqueio</flowNodeRef>
+        <flowNodeRef>task_recebe_req</flowNodeRef>
+        <flowNodeRef>task_valida_senha</flowNodeRef>
+        <flowNodeRef>gw_senha</flowNodeRef>
+        <flowNodeRef>task_ret401</flowNodeRef>
+        <flowNodeRef>task_incrementa</flowNodeRef>
+        <flowNodeRef>task_ret403</flowNodeRef>
+        <flowNodeRef>task_registra_tcle</flowNodeRef>
+        <flowNodeRef>task_ret423</flowNodeRef>
+        <flowNodeRef>gw_limite</flowNodeRef>
+        <flowNodeRef>task_gera_jwt</flowNodeRef>
+        <flowNodeRef>task_zera</flowNodeRef>
+        <flowNodeRef>task_ret_jwt</flowNodeRef>
+      </lane>
+      <lane id="lane_frontend" name="Frontend">
+        <flowNodeRef>gw_resultado</flowNodeRef>
+        <flowNodeRef>end_erro_401</flowNodeRef>
+        <flowNodeRef>task_exibe_403</flowNodeRef>
+        <flowNodeRef>task_exibe_401</flowNodeRef>
+        <flowNodeRef>task_exibe_423</flowNodeRef>
+        <flowNodeRef>end_erro_403</flowNodeRef>
+        <flowNodeRef>end_erro_423</flowNodeRef>
+        <flowNodeRef>task_armazena_jwt</flowNodeRef>
+        <flowNodeRef>task_redireciona</flowNodeRef>
+        <flowNodeRef>task_renderiza</flowNodeRef>
+        <flowNodeRef>task_alerta_campo</flowNodeRef>
+        <flowNodeRef>gw_campos</flowNodeRef>
+        <flowNodeRef>task_envia_post</flowNodeRef>
+        <flowNodeRef>task_exibe_tcle</flowNodeRef>
+        <flowNodeRef>task_recebe_resp</flowNodeRef>
+      </lane>
+      <lane id="lane_usuario" name="Usuario">
+        <flowNodeRef>end_sucesso</flowNodeRef>
+        <flowNodeRef>start_acesso</flowNodeRef>
+        <flowNodeRef>task_preenche</flowNodeRef>
+        <flowNodeRef>task_submete</flowNodeRef>
+        <flowNodeRef>task_aceita_tcle</flowNodeRef>
+      </lane>
+    </laneSet>
+    <exclusiveGateway id="gw_resultado" name="Resultado da autenticacao?">
+      <incoming>Flow_1swcjku</incoming>
+      <outgoing>f_res_401</outgoing>
+      <outgoing>f_res_403</outgoing>
+      <outgoing>f_res_423</outgoing>
+      <outgoing>Flow_06szlwh</outgoing>
+      <outgoing>Flow_0k1s10b</outgoing>
+    </exclusiveGateway>
+    <endEvent id="end_erro_401" name="RA/CPF ou senha incorretos">
+      <incoming>Flow_0616t0c</incoming>
+    </endEvent>
+    <serviceTask id="task_exibe_403" name="Exibe: Acesso nao liberado">
+      <incoming>f_res_403</incoming>
+      <outgoing>Flow_1h20xy5</outgoing>
+    </serviceTask>
+    <serviceTask id="task_exibe_401" name="Exibe: RA/CPF ou senha incorretos">
+      <incoming>f_res_401</incoming>
+      <outgoing>Flow_0616t0c</outgoing>
+    </serviceTask>
+    <serviceTask id="task_exibe_423" name="Exibe: Conta bloqueada">
+      <incoming>f_res_423</incoming>
+      <outgoing>Flow_1d0l54a</outgoing>
+    </serviceTask>
+    <endEvent id="end_erro_403" name="Acesso nao liberado">
+      <incoming>Flow_1h20xy5</incoming>
+    </endEvent>
+    <endEvent id="end_erro_423" name="Conta bloqueada temporariamente">
+      <incoming>Flow_1d0l54a</incoming>
+    </endEvent>
+    <serviceTask id="task_armazena_jwt" name="Armazena token JWT no cliente">
+      <incoming>Flow_0k1s10b</incoming>
+      <outgoing>f_armazena_redireciona</outgoing>
+    </serviceTask>
+    <serviceTask id="task_redireciona" name="Redireciona para painel do perfil">
+      <incoming>f_armazena_redireciona</incoming>
+      <outgoing>Flow_17pepwb</outgoing>
+    </serviceTask>
+    <endEvent id="end_sucesso" name="Acessa o painel do perfil">
+      <incoming>Flow_17pepwb</incoming>
+    </endEvent>
+    <startEvent id="start_acesso" name="Acessa a URL do sistema">
+      <outgoing>f01</outgoing>
+      <outgoing>Flow_0vlm2wp</outgoing>
+    </startEvent>
+    <userTask id="task_preenche" name="Preenche RA/CPF e Senha">
+      <incoming>f01</incoming>
+      <incoming>f_volta_campo</incoming>
+      <outgoing>f02</outgoing>
+    </userTask>
+    <userTask id="task_submete" name="Submete o formulario">
+      <incoming>f02</incoming>
+      <outgoing>f03</outgoing>
+    </userTask>
+    <serviceTask id="task_renderiza" name="Renderiza tela de login">
+      <incoming>Flow_0vlm2wp</incoming>
+    </serviceTask>
+    <serviceTask id="task_alerta_campo" name="Exibe alerta: campo invalido">
+      <incoming>f_campos_inv</incoming>
+      <outgoing>f_volta_campo</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_campos" name="Campos validos?">
+      <incoming>f03</incoming>
+      <outgoing>f_campos_ok</outgoing>
+      <outgoing>f_campos_inv</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_envia_post" name="Envia POST /auth/login">
+      <incoming>f_campos_ok</incoming>
+      <outgoing>f_post_backend</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_existe" name="Usuario existe no banco?">
+      <incoming>Flow_0a2iy6b</incoming>
+      <outgoing>f_existe_sim</outgoing>
+      <outgoing>Flow_1o4ke1b</outgoing>
+    </exclusiveGateway>
+    <exclusiveGateway id="gw_liberada" name="Conta esta liberada?">
+      <incoming>f_existe_sim</incoming>
+      <outgoing>f_lib_sim</outgoing>
+      <outgoing>Flow_0mfbqlw</outgoing>
+    </exclusiveGateway>
+    <exclusiveGateway id="gw_bloqueada" name="Conta bloqueada?">
+      <incoming>f_lib_sim</incoming>
+      <incoming>f_bloqueio_423</incoming>
+      <outgoing>f_bloq_nao</outgoing>
+      <outgoing>Flow_17td9dl</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_exibe_tcle" name="Exibe modal do TCLE">
+      <incoming>Flow_06szlwh</incoming>
+      <outgoing>Flow_1tu2hjo</outgoing>
+    </serviceTask>
+    <userTask id="task_aceita_tcle" name="Le e aceita o TCLE">
+      <incoming>Flow_1tu2hjo</incoming>
+      <outgoing>Flow_0ts3e2o</outgoing>
+    </userTask>
+    <serviceTask id="task_ativa_bloqueio" name="Ativa bloqueio de 15 minutos">
+      <incoming>f_limite_sim</incoming>
+      <outgoing>f_bloqueio_423</outgoing>
+    </serviceTask>
+    <serviceTask id="task_recebe_req" name="Recebe POST /auth/login">
+      <incoming>f_post_backend</incoming>
+      <outgoing>Flow_0a2iy6b</outgoing>
+    </serviceTask>
+    <serviceTask id="task_valida_senha" name="Valida senha">
+      <incoming>Flow_1o4ke1b</incoming>
+      <outgoing>Flow_0p5k7h1</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_senha" name="Senha correta?">
+      <incoming>Flow_0p5k7h1</incoming>
+      <outgoing>Flow_1k2aian</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_ret401" name="Retorna 401: credenciais invalidas">
+      <incoming>Flow_1k2aian</incoming>
+      <outgoing>Flow_0d9b1lq</outgoing>
+      <outgoing>Flow_1tcniwd</outgoing>
+    </serviceTask>
+    <serviceTask id="task_recebe_resp" name="Recebe resposta da API">
+      <incoming>Flow_0d9b1lq</incoming>
+      <incoming>Flow_0sgdn8n</incoming>
+      <incoming>Flow_0xlwp17</incoming>
+      <incoming>Flow_0v3jca5</incoming>
+      <outgoing>Flow_1swcjku</outgoing>
+    </serviceTask>
+    <serviceTask id="task_incrementa" name="Incrementa contador de tentativas">
+      <incoming>Flow_1tcniwd</incoming>
+      <outgoing>Flow_0i7qa22</outgoing>
+    </serviceTask>
+    <serviceTask id="task_ret403" name="Retorna 403: acesso nao liberado">
+      <incoming>Flow_0mfbqlw</incoming>
+      <outgoing>Flow_0v3jca5</outgoing>
+    </serviceTask>
+    <serviceTask id="task_registra_tcle" name="Registra aceite do TCLE (data/hora/IP) - LGPD">
+      <incoming>Flow_0ts3e2o</incoming>
+    </serviceTask>
+    <serviceTask id="task_ret423" name="Retorna 423: conta bloqueada">
+      <incoming>f_bloq_nao</incoming>
+      <outgoing>Flow_0xlwp17</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_limite" name="Atingiu 5 tentativas?">
+      <incoming>Flow_0i7qa22</incoming>
+      <outgoing>f_limite_sim</outgoing>
+    </exclusiveGateway>
+    <sequenceFlow id="Flow_1swcjku" sourceRef="task_recebe_resp" targetRef="gw_resultado" />
+    <sequenceFlow id="f_res_401" sourceRef="gw_resultado" targetRef="task_exibe_401" />
+    <sequenceFlow id="f_res_403" sourceRef="gw_resultado" targetRef="task_exibe_403" />
+    <sequenceFlow id="f_res_423" sourceRef="gw_resultado" targetRef="task_exibe_423" />
+    <sequenceFlow id="Flow_06szlwh" sourceRef="gw_resultado" targetRef="task_exibe_tcle" />
+    <sequenceFlow id="Flow_0k1s10b" sourceRef="gw_resultado" targetRef="task_armazena_jwt" />
+    <sequenceFlow id="Flow_0616t0c" sourceRef="task_exibe_401" targetRef="end_erro_401" />
+    <sequenceFlow id="Flow_1h20xy5" sourceRef="task_exibe_403" targetRef="end_erro_403" />
+    <sequenceFlow id="Flow_1d0l54a" sourceRef="task_exibe_423" targetRef="end_erro_423" />
+    <sequenceFlow id="f_armazena_redireciona" sourceRef="task_armazena_jwt" targetRef="task_redireciona" />
+    <sequenceFlow id="Flow_17pepwb" sourceRef="task_redireciona" targetRef="end_sucesso" />
+    <sequenceFlow id="f01" sourceRef="start_acesso" targetRef="task_preenche" />
+    <sequenceFlow id="Flow_0vlm2wp" sourceRef="start_acesso" targetRef="task_renderiza" />
+    <sequenceFlow id="f_volta_campo" sourceRef="task_alerta_campo" targetRef="task_preenche" />
+    <sequenceFlow id="f02" sourceRef="task_preenche" targetRef="task_submete" />
+    <sequenceFlow id="f03" sourceRef="task_submete" targetRef="gw_campos" />
+    <sequenceFlow id="f_campos_inv" sourceRef="gw_campos" targetRef="task_alerta_campo" />
+    <sequenceFlow id="f_campos_ok" sourceRef="gw_campos" targetRef="task_envia_post" />
+    <sequenceFlow id="f_post_backend" sourceRef="task_envia_post" targetRef="task_recebe_req" />
+    <sequenceFlow id="Flow_0a2iy6b" sourceRef="task_recebe_req" targetRef="gw_existe" />
+    <sequenceFlow id="f_existe_sim" sourceRef="gw_existe" targetRef="gw_liberada" />
+    <sequenceFlow id="Flow_1o4ke1b" sourceRef="gw_existe" targetRef="task_valida_senha" />
+    <sequenceFlow id="f_lib_sim" sourceRef="gw_liberada" targetRef="gw_bloqueada" />
+    <sequenceFlow id="Flow_0mfbqlw" sourceRef="gw_liberada" targetRef="task_ret403" />
+    <sequenceFlow id="f_bloqueio_423" sourceRef="task_ativa_bloqueio" targetRef="gw_bloqueada" />
+    <sequenceFlow id="f_bloq_nao" sourceRef="gw_bloqueada" targetRef="task_ret423" />
+    <sequenceFlow id="Flow_17td9dl" sourceRef="gw_bloqueada" targetRef="task_gera_jwt" />
+    <sequenceFlow id="Flow_1tu2hjo" sourceRef="task_exibe_tcle" targetRef="task_aceita_tcle" />
+    <sequenceFlow id="Flow_0ts3e2o" sourceRef="task_aceita_tcle" targetRef="task_registra_tcle" />
+    <sequenceFlow id="f_limite_sim" sourceRef="gw_limite" targetRef="task_ativa_bloqueio" />
+    <sequenceFlow id="Flow_0p5k7h1" sourceRef="task_valida_senha" targetRef="gw_senha" />
+    <sequenceFlow id="Flow_1k2aian" sourceRef="gw_senha" targetRef="task_ret401" />
+    <sequenceFlow id="Flow_0d9b1lq" sourceRef="task_ret401" targetRef="task_recebe_resp" />
+    <sequenceFlow id="Flow_1tcniwd" sourceRef="task_ret401" targetRef="task_incrementa" />
+    <sequenceFlow id="Flow_0sgdn8n" sourceRef="task_ret_jwt" targetRef="task_recebe_resp" />
+    <sequenceFlow id="Flow_0xlwp17" sourceRef="task_ret423" targetRef="task_recebe_resp" />
+    <sequenceFlow id="Flow_0v3jca5" sourceRef="task_ret403" targetRef="task_recebe_resp" />
+    <sequenceFlow id="Flow_0i7qa22" sourceRef="task_incrementa" targetRef="gw_limite" />
+    <serviceTask id="task_gera_jwt" name="Gera token JWT (expira em 30 min)">
+      <incoming>Flow_17td9dl</incoming>
+      <outgoing>Flow_1120jui</outgoing>
+    </serviceTask>
+    <serviceTask id="task_zera" name="Zera contador de tentativas">
+      <incoming>Flow_1120jui</incoming>
+      <outgoing>Flow_14z6wer</outgoing>
+    </serviceTask>
+    <serviceTask id="task_ret_jwt" name="Retorna JWT + perfil do usuario">
+      <incoming>Flow_14z6wer</incoming>
+      <outgoing>Flow_0sgdn8n</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_1120jui" sourceRef="task_gera_jwt" targetRef="task_zera" />
+    <sequenceFlow id="Flow_14z6wer" sourceRef="task_zera" targetRef="task_ret_jwt" />
+  </process>
+  <bpmndi:BPMNDiagram id="diag1">
+    <bpmndi:BPMNPlane id="plane1" bpmnElement="Collaboration_0vo0t9b">
+      <bpmndi:BPMNShape id="Participant_19xuwdb_di" bpmnElement="Participant_19xuwdb" isHorizontal="true">
+        <dc:Bounds x="160" y="60" width="2240" height="1710" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_b" bpmnElement="lane_backend" isHorizontal="true">
+        <dc:Bounds x="210" y="950" width="2170" height="800" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_f" bpmnElement="lane_frontend" isHorizontal="true">
+        <dc:Bounds x="210" y="350" width="2170" height="600" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_u" bpmnElement="lane_usuario" isHorizontal="true">
+        <dc:Bounds x="210" y="80" width="2170" height="270" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_resultado" bpmnElement="gw_resultado" isMarkerVisible="true">
+        <dc:Bounds x="1236" y="646" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1165" y="626" width="69" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_401" bpmnElement="end_erro_401">
+        <dc:Bounds x="1732" y="562" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1706" y="604" width="89" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_403" bpmnElement="task_exibe_403">
+        <dc:Bounds x="1455" y="640" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_401" bpmnElement="task_exibe_401">
+        <dc:Bounds x="1455" y="550" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_423" bpmnElement="task_exibe_423">
+        <dc:Bounds x="1455" y="750" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_403" bpmnElement="end_erro_403">
+        <dc:Bounds x="1732" y="652" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1721" y="694" width="58" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_423" bpmnElement="end_erro_423">
+        <dc:Bounds x="1732" y="762" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1708" y="804" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_armazena" bpmnElement="task_armazena_jwt">
+        <dc:Bounds x="1455" y="855" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_redireciona" bpmnElement="task_redireciona">
+        <dc:Bounds x="1705" y="855" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_ok" bpmnElement="end_sucesso">
+        <dc:Bounds x="1922" y="232" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1901" y="194.5" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_start" bpmnElement="start_acesso">
+        <dc:Bounds x="262" y="182" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="237" y="144.5" width="86" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_preenche" bpmnElement="task_preenche">
+        <dc:Bounds x="365" y="170" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_submete" bpmnElement="task_submete">
+        <dc:Bounds x="585" y="170" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_renderiza" bpmnElement="task_renderiza">
+        <dc:Bounds x="235" y="390" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_alerta" bpmnElement="task_alerta_campo">
+        <dc:Bounds x="485" y="390" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_campos" bpmnElement="gw_campos" isMarkerVisible="true">
+        <dc:Bounds x="771" y="396" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="829" y="413" width="85" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_envia_post" bpmnElement="task_envia_post">
+        <dc:Bounds x="720" y="590" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_existe" bpmnElement="gw_existe" isMarkerVisible="true">
+        <dc:Bounds x="976" y="1526" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="958" y="1580" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_liberada" bpmnElement="gw_liberada" isMarkerVisible="true">
+        <dc:Bounds x="1176" y="1526" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1173" y="1584" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_bloq" bpmnElement="gw_bloqueada" isMarkerVisible="true">
+        <dc:Bounds x="1366" y="1526" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1415" y="1587" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_tcle" bpmnElement="task_exibe_tcle">
+        <dc:Bounds x="1185" y="440" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_aceita_tcle" bpmnElement="task_aceita_tcle">
+        <dc:Bounds x="1180" y="230" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ativa_bloq" bpmnElement="task_ativa_bloqueio">
+        <dc:Bounds x="1310" y="1650" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_recebe_req" bpmnElement="task_recebe_req">
+        <dc:Bounds x="720" y="1520" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_valida" bpmnElement="task_valida_senha">
+        <dc:Bounds x="920" y="1390" width="160" height="60" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_senha" bpmnElement="gw_senha" isMarkerVisible="true">
+        <dc:Bounds x="976" y="1286" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="872" y="1303" width="76" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret401" bpmnElement="task_ret401">
+        <dc:Bounds x="920" y="1160" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_recebe_resp" bpmnElement="task_recebe_resp">
+        <dc:Bounds x="925" y="640" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_incrementa" bpmnElement="task_incrementa">
+        <dc:Bounds x="550" y="1160" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret403" bpmnElement="task_ret403">
+        <dc:Bounds x="1120" y="1160" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_reg_tcle" bpmnElement="task_registra_tcle">
+        <dc:Bounds x="1310" y="1030" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret423" bpmnElement="task_ret423">
+        <dc:Bounds x="1310" y="1160" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_limite" bpmnElement="gw_limite" isMarkerVisible="true">
+        <dc:Bounds x="606" y="1656" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="558" y="1695.5" width="54" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gera_jwt" bpmnElement="task_gera_jwt">
+        <dc:Bounds x="1520" y="1520" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_zera" bpmnElement="task_zera">
+        <dc:Bounds x="1730" y="1520" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_jwt" bpmnElement="task_ret_jwt">
+        <dc:Bounds x="1730" y="1280" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1swcjku_di" bpmnElement="Flow_1swcjku">
+        <di:waypoint x="1075" y="670" />
+        <di:waypoint x="1236" y="670" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_res_401" bpmnElement="f_res_401">
+        <di:waypoint x="1260" y="646" />
+        <di:waypoint x="1260" y="580" />
+        <di:waypoint x="1455" y="580" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1220" y="362" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_res_403" bpmnElement="f_res_403">
+        <di:waypoint x="1284" y="670" />
+        <di:waypoint x="1455" y="670" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1220" y="396" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_res_423" bpmnElement="f_res_423">
+        <di:waypoint x="1260" y="694" />
+        <di:waypoint x="1260" y="780" />
+        <di:waypoint x="1455" y="780" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1220" y="414" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_06szlwh_di" bpmnElement="Flow_06szlwh">
+        <di:waypoint x="1260" y="646" />
+        <di:waypoint x="1260" y="500" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0k1s10b_di" bpmnElement="Flow_0k1s10b">
+        <di:waypoint x="1260" y="694" />
+        <di:waypoint x="1260" y="885" />
+        <di:waypoint x="1455" y="885" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0616t0c_di" bpmnElement="Flow_0616t0c">
+        <di:waypoint x="1605" y="580" />
+        <di:waypoint x="1732" y="580" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1h20xy5_di" bpmnElement="Flow_1h20xy5">
+        <di:waypoint x="1605" y="670" />
+        <di:waypoint x="1732" y="670" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1d0l54a_di" bpmnElement="Flow_1d0l54a">
+        <di:waypoint x="1605" y="780" />
+        <di:waypoint x="1732" y="780" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_arm_red" bpmnElement="f_armazena_redireciona">
+        <di:waypoint x="1605" y="885" />
+        <di:waypoint x="1705" y="885" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17pepwb_di" bpmnElement="Flow_17pepwb">
+        <di:waypoint x="1855" y="885" />
+        <di:waypoint x="1889" y="885" />
+        <di:waypoint x="1889" y="250" />
+        <di:waypoint x="1922" y="250" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e01" bpmnElement="f01">
+        <di:waypoint x="298" y="200" />
+        <di:waypoint x="365" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0vlm2wp_di" bpmnElement="Flow_0vlm2wp">
+        <di:waypoint x="280" y="218" />
+        <di:waypoint x="280" y="309" />
+        <di:waypoint x="310" y="309" />
+        <di:waypoint x="310" y="390" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_volta" bpmnElement="f_volta_campo">
+        <di:waypoint x="485" y="420" />
+        <di:waypoint x="440" y="420" />
+        <di:waypoint x="440" y="230" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e02" bpmnElement="f02">
+        <di:waypoint x="515" y="200" />
+        <di:waypoint x="585" y="200" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e03" bpmnElement="f03">
+        <di:waypoint x="735" y="200" />
+        <di:waypoint x="795" y="200" />
+        <di:waypoint x="795" y="396" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_inv" bpmnElement="f_campos_inv">
+        <di:waypoint x="771" y="420" />
+        <di:waypoint x="635" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="651" y="399" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_ok" bpmnElement="f_campos_ok">
+        <di:waypoint x="795" y="444" />
+        <di:waypoint x="795" y="590" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="680" y="337" width="38" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_post_b" bpmnElement="f_post_backend">
+        <di:waypoint x="795" y="650" />
+        <di:waypoint x="795" y="1520" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0a2iy6b_di" bpmnElement="Flow_0a2iy6b">
+        <di:waypoint x="870" y="1550" />
+        <di:waypoint x="976" y="1550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_ex_s" bpmnElement="f_existe_sim">
+        <di:waypoint x="1024" y="1550" />
+        <di:waypoint x="1176" y="1550" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1000" y="672" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1o4ke1b_di" bpmnElement="Flow_1o4ke1b">
+        <di:waypoint x="1000" y="1526" />
+        <di:waypoint x="1000" y="1450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_lib_s" bpmnElement="f_lib_sim">
+        <di:waypoint x="1224" y="1550" />
+        <di:waypoint x="1366" y="1550" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1120" y="672" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0mfbqlw_di" bpmnElement="Flow_0mfbqlw">
+        <di:waypoint x="1200" y="1526" />
+        <di:waypoint x="1200" y="1220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_bloq423" bpmnElement="f_bloqueio_423">
+        <di:waypoint x="1390" y="1650" />
+        <di:waypoint x="1390" y="1574" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_bloq_n" bpmnElement="f_bloq_nao">
+        <di:waypoint x="1390" y="1526" />
+        <di:waypoint x="1390" y="1220" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1240" y="672" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_17td9dl_di" bpmnElement="Flow_17td9dl">
+        <di:waypoint x="1414" y="1550" />
+        <di:waypoint x="1520" y="1550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1tu2hjo_di" bpmnElement="Flow_1tu2hjo">
+        <di:waypoint x="1260" y="440" />
+        <di:waypoint x="1260" y="290" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ts3e2o_di" bpmnElement="Flow_0ts3e2o">
+        <di:waypoint x="1340" y="260" />
+        <di:waypoint x="1390" y="260" />
+        <di:waypoint x="1390" y="1030" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_lim_s" bpmnElement="f_limite_sim">
+        <di:waypoint x="654" y="1680" />
+        <di:waypoint x="1310" y="1680" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1445" y="892" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0p5k7h1_di" bpmnElement="Flow_0p5k7h1">
+        <di:waypoint x="1000" y="1390" />
+        <di:waypoint x="1000" y="1334" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1k2aian_di" bpmnElement="Flow_1k2aian">
+        <di:waypoint x="1000" y="1286" />
+        <di:waypoint x="1000" y="1220" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0d9b1lq_di" bpmnElement="Flow_0d9b1lq">
+        <di:waypoint x="1000" y="1160" />
+        <di:waypoint x="1000" y="700" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1tcniwd_di" bpmnElement="Flow_1tcniwd">
+        <di:waypoint x="920" y="1190" />
+        <di:waypoint x="710" y="1190" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0sgdn8n_di" bpmnElement="Flow_0sgdn8n">
+        <di:waypoint x="1810" y="1280" />
+        <di:waypoint x="1810" y="1120" />
+        <di:waypoint x="1000" y="1120" />
+        <di:waypoint x="1000" y="700" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0xlwp17_di" bpmnElement="Flow_0xlwp17">
+        <di:waypoint x="1390" y="1160" />
+        <di:waypoint x="1390" y="1120" />
+        <di:waypoint x="1000" y="1120" />
+        <di:waypoint x="1000" y="700" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0v3jca5_di" bpmnElement="Flow_0v3jca5">
+        <di:waypoint x="1200" y="1160" />
+        <di:waypoint x="1200" y="1120" />
+        <di:waypoint x="1000" y="1120" />
+        <di:waypoint x="1000" y="700" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0i7qa22_di" bpmnElement="Flow_0i7qa22">
+        <di:waypoint x="630" y="1220" />
+        <di:waypoint x="630" y="1656" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1120jui_di" bpmnElement="Flow_1120jui">
+        <di:waypoint x="1680" y="1550" />
+        <di:waypoint x="1730" y="1550" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_14z6wer_di" bpmnElement="Flow_14z6wer">
+        <di:waypoint x="1810" y="1520" />
+        <di:waypoint x="1810" y="1340" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>

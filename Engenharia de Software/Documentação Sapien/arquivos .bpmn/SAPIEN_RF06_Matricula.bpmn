@@ -1,0 +1,662 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" targetNamespace="http://sapien.academic/bpmn" exporter="Camunda Modeler" exporterVersion="5.47.0">
+  <collaboration id="Collaboration_matricula">
+    <participant id="Participant_matricula" name="PÁGINA DE MATRÍCULA - SAPIEN" processRef="proc_matricula" />
+  </collaboration>
+  <process id="proc_matricula" name="RF06 - Matricula" isExecutable="false">
+    <laneSet id="ls1">
+      <lane id="lane_usuario" name="Usuario">
+        <flowNodeRef>start_matricula</flowNodeRef>
+        <flowNodeRef>task_seleciona_disciplinas</flowNodeRef>
+        <flowNodeRef>task_aceita_regras</flowNodeRef>
+        <flowNodeRef>task_confirma_matricula</flowNodeRef>
+      </lane>
+      <lane id="lane_frontend" name="Frontend">
+        <flowNodeRef>task_renderiza</flowNodeRef>
+        <flowNodeRef>task_envia_req_periodo</flowNodeRef>
+        <flowNodeRef>Activity_1c4im5d</flowNodeRef>
+        <flowNodeRef>task_exibe_disciplinas</flowNodeRef>
+        <flowNodeRef>task_envia_selecao</flowNodeRef>
+        <flowNodeRef>task_recebe_resp</flowNodeRef>
+        <flowNodeRef>gw_resultado</flowNodeRef>
+        <flowNodeRef>task_exibe_confirmacao</flowNodeRef>
+        <flowNodeRef>end_sucesso</flowNodeRef>
+        <flowNodeRef>task_exibe_fora_periodo</flowNodeRef>
+        <flowNodeRef>end_fora_periodo</flowNodeRef>
+        <flowNodeRef>task_exibe_financeiro</flowNodeRef>
+        <flowNodeRef>end_financeiro</flowNodeRef>
+        <flowNodeRef>task_exibe_prereq</flowNodeRef>
+        <flowNodeRef>end_prereq</flowNodeRef>
+        <flowNodeRef>task_exibe_conflito</flowNodeRef>
+        <flowNodeRef>end_conflito</flowNodeRef>
+        <flowNodeRef>task_exibe_creditos</flowNodeRef>
+        <flowNodeRef>end_creditos</flowNodeRef>
+      </lane>
+      <lane id="lane_backend" name="Backend / API">
+        <flowNodeRef>task_ret_fora_periodo</flowNodeRef>
+        <flowNodeRef>task_retorna_disciplinas</flowNodeRef>
+        <flowNodeRef>task_busca_disciplinas</flowNodeRef>
+        <flowNodeRef>gw_periodo</flowNodeRef>
+        <flowNodeRef>task_recebe_req_periodo</flowNodeRef>
+        <flowNodeRef>task_recebe_selecao</flowNodeRef>
+        <flowNodeRef>gw_financeiro</flowNodeRef>
+        <flowNodeRef>task_ret_financeiro</flowNodeRef>
+        <flowNodeRef>task_ret_prereq</flowNodeRef>
+        <flowNodeRef>task_ret_conflito</flowNodeRef>
+        <flowNodeRef>gw_prereq</flowNodeRef>
+        <flowNodeRef>gw_conflito</flowNodeRef>
+        <flowNodeRef>gw_creditos</flowNodeRef>
+        <flowNodeRef>task_ret_creditos</flowNodeRef>
+        <flowNodeRef>task_efetiva_matricula</flowNodeRef>
+        <flowNodeRef>task_envia_email</flowNodeRef>
+        <flowNodeRef>task_retorna_confirmacao</flowNodeRef>
+      </lane>
+    </laneSet>
+    <startEvent id="start_matricula" name="Acessa o modulo de Matricula">
+      <outgoing>f_start_renderiza</outgoing>
+    </startEvent>
+    <serviceTask id="task_renderiza" name="Renderiza pagina de Matricula">
+      <incoming>f_start_renderiza</incoming>
+      <outgoing>f_renderiza_envia</outgoing>
+    </serviceTask>
+    <serviceTask id="task_envia_req_periodo" name="Envia requisicao para verificar periodo de matricula">
+      <incoming>f_renderiza_envia</incoming>
+      <outgoing>f_envia_periodo_backend</outgoing>
+    </serviceTask>
+    <sequenceFlow id="f_start_renderiza" sourceRef="start_matricula" targetRef="task_renderiza" />
+    <sequenceFlow id="f_renderiza_envia" sourceRef="task_renderiza" targetRef="task_envia_req_periodo" />
+    <sequenceFlow id="f_envia_periodo_backend" sourceRef="task_envia_req_periodo" targetRef="task_recebe_req_periodo" />
+    <sequenceFlow id="f_exibe_disc_usuario" sourceRef="task_exibe_disciplinas" targetRef="task_seleciona_disciplinas" />
+    <sequenceFlow id="f_aceita_confirma" sourceRef="task_aceita_regras" targetRef="task_confirma_matricula" />
+    <sequenceFlow id="f_confirma_envia" sourceRef="task_confirma_matricula" targetRef="task_envia_selecao" />
+    <sequenceFlow id="f_envia_selecao_backend" sourceRef="task_envia_selecao" targetRef="task_recebe_selecao" />
+    <serviceTask id="Activity_1c4im5d" name="Exibe notificação de &#34;Fora do Período de Matrícula&#34;">
+      <incoming>Flow_0mxgdg4</incoming>
+    </serviceTask>
+    <sequenceFlow id="Flow_0mxgdg4" sourceRef="task_ret_fora_periodo" targetRef="Activity_1c4im5d" />
+    <serviceTask id="task_exibe_disciplinas" name="Exibe disciplinas disponiveis para selecao">
+      <incoming>Flow_1y62w99</incoming>
+      <outgoing>f_exibe_disc_usuario</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_1y62w99" sourceRef="task_retorna_disciplinas" targetRef="task_exibe_disciplinas" />
+    <userTask id="task_seleciona_disciplinas" name="Seleciona disciplinas para o semestre">
+      <incoming>f_exibe_disc_usuario</incoming>
+      <outgoing>Flow_0ifyor3</outgoing>
+    </userTask>
+    <userTask id="task_aceita_regras" name="Confirma aceite das regras de matricula">
+      <incoming>Flow_0ifyor3</incoming>
+      <outgoing>f_aceita_confirma</outgoing>
+    </userTask>
+    <sequenceFlow id="Flow_0ifyor3" sourceRef="task_seleciona_disciplinas" targetRef="task_aceita_regras" />
+    <userTask id="task_confirma_matricula" name="Confirma a matricula">
+      <incoming>f_aceita_confirma</incoming>
+      <outgoing>f_confirma_envia</outgoing>
+    </userTask>
+    <serviceTask id="task_envia_selecao" name="Envia selecao de disciplinas para o Backend">
+      <incoming>f_confirma_envia</incoming>
+      <outgoing>f_envia_selecao_backend</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_0nnndtc" sourceRef="gw_financeiro" targetRef="task_ret_financeiro" />
+    <sequenceFlow id="f_selecao_gw_fin" sourceRef="task_recebe_selecao" targetRef="gw_financeiro" />
+    <sequenceFlow id="f_fin_ok" sourceRef="gw_financeiro" targetRef="gw_prereq" />
+    <sequenceFlow id="f_prereq_ok" sourceRef="gw_prereq" targetRef="gw_conflito" />
+    <sequenceFlow id="f_conflito_ok" sourceRef="gw_conflito" targetRef="gw_creditos" />
+    <serviceTask id="task_ret_fora_periodo" name="Retorna aviso: fora do periodo de matricula">
+      <incoming>Flow_0u36x09</incoming>
+      <outgoing>Flow_0mxgdg4</outgoing>
+    </serviceTask>
+    <serviceTask id="task_retorna_disciplinas" name="Retorna lista de disciplinas para o Frontend">
+      <incoming>f_busca_disc</incoming>
+      <outgoing>Flow_1y62w99</outgoing>
+    </serviceTask>
+    <serviceTask id="task_busca_disciplinas" name="Busca disciplinas disponiveis para o semestre">
+      <incoming>f_periodo_sim</incoming>
+      <outgoing>f_busca_disc</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_periodo" name="Periodo de matricula aberto?">
+      <incoming>f_req_gw_periodo</incoming>
+      <outgoing>f_periodo_sim</outgoing>
+      <outgoing>Flow_0u36x09</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_recebe_req_periodo" name="Recebe requisicao e verifica periodo de matricula">
+      <incoming>f_envia_periodo_backend</incoming>
+      <outgoing>f_req_gw_periodo</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_0u36x09" sourceRef="gw_periodo" targetRef="task_ret_fora_periodo" />
+    <sequenceFlow id="f_busca_disc" sourceRef="task_busca_disciplinas" targetRef="task_retorna_disciplinas" />
+    <sequenceFlow id="f_periodo_sim" sourceRef="gw_periodo" targetRef="task_busca_disciplinas" />
+    <sequenceFlow id="f_req_gw_periodo" sourceRef="task_recebe_req_periodo" targetRef="gw_periodo" />
+    <serviceTask id="task_recebe_selecao" name="Recebe selecao de disciplinas">
+      <incoming>f_envia_selecao_backend</incoming>
+      <outgoing>f_selecao_gw_fin</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_financeiro" name="Sem pendencia financeira?">
+      <incoming>f_selecao_gw_fin</incoming>
+      <outgoing>f_fin_ok</outgoing>
+      <outgoing>Flow_0nnndtc</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_ret_financeiro" name="Retorna bloqueio: pendencia financeira">
+      <incoming>Flow_0nnndtc</incoming>
+      <outgoing>Flow_0iyf9ag</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_0ep6heu" sourceRef="gw_creditos" targetRef="task_ret_creditos" />
+    <serviceTask id="task_ret_prereq" name="Retorna erro: pre-requisito nao cumprido">
+      <incoming>Flow_0q4goww</incoming>
+      <outgoing>Flow_0dy5dhx</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_0q4goww" sourceRef="gw_prereq" targetRef="task_ret_prereq" />
+    <exclusiveGateway id="gw_prereq" name="Pre-requisitos cumpridos?">
+      <incoming>f_fin_ok</incoming>
+      <outgoing>f_prereq_ok</outgoing>
+      <outgoing>Flow_0q4goww</outgoing>
+    </exclusiveGateway>
+    <exclusiveGateway id="gw_conflito" name="Sem conflito de horario?">
+      <incoming>f_prereq_ok</incoming>
+      <outgoing>f_conflito_ok</outgoing>
+      <outgoing>Flow_1ul4q3k</outgoing>
+    </exclusiveGateway>
+    <sequenceFlow id="Flow_1ul4q3k" sourceRef="gw_conflito" targetRef="task_ret_conflito" />
+    <exclusiveGateway id="gw_creditos" name="Limite de creditos respeitado?">
+      <incoming>f_conflito_ok</incoming>
+      <outgoing>Flow_0ep6heu</outgoing>
+      <outgoing>Flow_0kodddd</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_ret_creditos" name="Retorna erro: limite de creditos excedido">
+      <incoming>Flow_0ep6heu</incoming>
+      <outgoing>Flow_0hnu4im</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_0hnu4im" sourceRef="task_ret_creditos" targetRef="task_recebe_resp" />
+    <serviceTask id="task_ret_conflito" name="Retorna erro: conflito de horario">
+      <incoming>Flow_1ul4q3k</incoming>
+      <outgoing>Flow_1mw55vd</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_1mw55vd" sourceRef="task_ret_conflito" targetRef="task_recebe_resp" />
+    <sequenceFlow id="Flow_0dy5dhx" sourceRef="task_ret_prereq" targetRef="task_recebe_resp" />
+    <sequenceFlow id="Flow_0iyf9ag" sourceRef="task_ret_financeiro" targetRef="task_recebe_resp" />
+    <sequenceFlow id="Flow_0kodddd" sourceRef="gw_creditos" targetRef="task_efetiva_matricula" />
+    <serviceTask id="task_efetiva_matricula" name="Efetiva matricula no banco de dados">
+      <incoming>Flow_0kodddd</incoming>
+      <outgoing>Flow_1r67csq</outgoing>
+    </serviceTask>
+    <serviceTask id="task_envia_email" name="Envia e-mail de confirmacao ao aluno">
+      <incoming>Flow_1r67csq</incoming>
+      <outgoing>Flow_1cvv6dx</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_1r67csq" sourceRef="task_efetiva_matricula" targetRef="task_envia_email" />
+    <serviceTask id="task_retorna_confirmacao" name="Retorna confirmacao de matricula ao Frontend">
+      <incoming>Flow_1cvv6dx</incoming>
+      <outgoing>Flow_0px52fq</outgoing>
+    </serviceTask>
+    <sequenceFlow id="Flow_1cvv6dx" sourceRef="task_envia_email" targetRef="task_retorna_confirmacao" />
+    <sequenceFlow id="Flow_0px52fq" sourceRef="task_retorna_confirmacao" targetRef="task_recebe_resp" />
+    <serviceTask id="task_recebe_resp" name="Recebe resposta da validacao">
+      <incoming>Flow_0hnu4im</incoming>
+      <incoming>Flow_1mw55vd</incoming>
+      <incoming>Flow_0dy5dhx</incoming>
+      <incoming>Flow_0iyf9ag</incoming>
+      <incoming>Flow_0px52fq</incoming>
+      <outgoing>f_recebe_gw</outgoing>
+    </serviceTask>
+    <exclusiveGateway id="gw_resultado" name="Resultado da validacao?">
+      <incoming>f_recebe_gw</incoming>
+      <outgoing>f_res_sucesso</outgoing>
+      <outgoing>f_res_periodo</outgoing>
+      <outgoing>f_res_financeiro</outgoing>
+      <outgoing>f_res_prereq</outgoing>
+      <outgoing>f_res_conflito</outgoing>
+      <outgoing>f_res_creditos</outgoing>
+    </exclusiveGateway>
+    <serviceTask id="task_exibe_confirmacao" name="Exibe confirmacao de matricula realizada">
+      <incoming>f_res_sucesso</incoming>
+      <outgoing>f_conf_end</outgoing>
+    </serviceTask>
+    <endEvent id="end_sucesso" name="Matricula realizada com sucesso">
+      <incoming>f_conf_end</incoming>
+    </endEvent>
+    <serviceTask id="task_exibe_fora_periodo" name="Exibe aviso: matricula fora do periodo">
+      <incoming>f_res_periodo</incoming>
+      <outgoing>f_periodo_end</outgoing>
+    </serviceTask>
+    <endEvent id="end_fora_periodo" name="Fora do periodo de matricula">
+      <incoming>f_periodo_end</incoming>
+    </endEvent>
+    <serviceTask id="task_exibe_financeiro" name="Exibe bloqueio: pendencia financeira">
+      <incoming>f_res_financeiro</incoming>
+      <outgoing>f_financeiro_end</outgoing>
+    </serviceTask>
+    <endEvent id="end_financeiro" name="Bloqueio por pendencia financeira">
+      <incoming>f_financeiro_end</incoming>
+    </endEvent>
+    <serviceTask id="task_exibe_prereq" name="Exibe erro: pre-requisito nao cumprido">
+      <incoming>f_res_prereq</incoming>
+      <outgoing>f_prereq_end</outgoing>
+    </serviceTask>
+    <endEvent id="end_prereq" name="Pre-requisito nao cumprido">
+      <incoming>f_prereq_end</incoming>
+    </endEvent>
+    <serviceTask id="task_exibe_conflito" name="Exibe erro: conflito de horario">
+      <incoming>f_res_conflito</incoming>
+      <outgoing>f_conflito_end</outgoing>
+    </serviceTask>
+    <endEvent id="end_conflito" name="Conflito de horario">
+      <incoming>f_conflito_end</incoming>
+    </endEvent>
+    <serviceTask id="task_exibe_creditos" name="Exibe erro: limite de creditos excedido">
+      <incoming>f_res_creditos</incoming>
+      <outgoing>f_creditos_end</outgoing>
+    </serviceTask>
+    <endEvent id="end_creditos" name="Limite de creditos excedido">
+      <incoming>f_creditos_end</incoming>
+    </endEvent>
+    <sequenceFlow id="f_recebe_gw" sourceRef="task_recebe_resp" targetRef="gw_resultado" />
+    <sequenceFlow id="f_res_sucesso" sourceRef="gw_resultado" targetRef="task_exibe_confirmacao" />
+    <sequenceFlow id="f_res_periodo" sourceRef="gw_resultado" targetRef="task_exibe_fora_periodo" />
+    <sequenceFlow id="f_res_financeiro" sourceRef="gw_resultado" targetRef="task_exibe_financeiro" />
+    <sequenceFlow id="f_res_prereq" sourceRef="gw_resultado" targetRef="task_exibe_prereq" />
+    <sequenceFlow id="f_res_conflito" sourceRef="gw_resultado" targetRef="task_exibe_conflito" />
+    <sequenceFlow id="f_res_creditos" sourceRef="gw_resultado" targetRef="task_exibe_creditos" />
+    <sequenceFlow id="f_conf_end" sourceRef="task_exibe_confirmacao" targetRef="end_sucesso" />
+    <sequenceFlow id="f_periodo_end" sourceRef="task_exibe_fora_periodo" targetRef="end_fora_periodo" />
+    <sequenceFlow id="f_financeiro_end" sourceRef="task_exibe_financeiro" targetRef="end_financeiro" />
+    <sequenceFlow id="f_prereq_end" sourceRef="task_exibe_prereq" targetRef="end_prereq" />
+    <sequenceFlow id="f_conflito_end" sourceRef="task_exibe_conflito" targetRef="end_conflito" />
+    <sequenceFlow id="f_creditos_end" sourceRef="task_exibe_creditos" targetRef="end_creditos" />
+  </process>
+  <bpmndi:BPMNDiagram id="diag_matricula">
+    <bpmndi:BPMNPlane id="plane_matricula" bpmnElement="Collaboration_matricula">
+      <bpmndi:BPMNShape id="Participant_matricula_di" bpmnElement="Participant_matricula" isHorizontal="true">
+        <dc:Bounds x="160" y="80" width="2780" height="1260" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_b" bpmnElement="lane_backend" isHorizontal="true">
+        <dc:Bounds x="210" y="850" width="2710" height="490" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_f" bpmnElement="lane_frontend" isHorizontal="true">
+        <dc:Bounds x="210" y="310" width="2710" height="540" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_lane_u" bpmnElement="lane_usuario" isHorizontal="true">
+        <dc:Bounds x="210" y="80" width="2710" height="230" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_start" bpmnElement="start_matricula">
+        <dc:Bounds x="262" y="177" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="237" y="135" width="86" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_renderiza" bpmnElement="task_renderiza">
+        <dc:Bounds x="365" y="420" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_envia_periodo" bpmnElement="task_envia_req_periodo">
+        <dc:Bounds x="580" y="420" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="BPMNShape_0yd2wlg" bpmnElement="Activity_1c4im5d">
+        <dc:Bounds x="750" y="660" width="150" height="60" />
+        <bpmndi:BPMNLabel />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_disc" bpmnElement="task_exibe_disciplinas">
+        <dc:Bounds x="940" y="470" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_seleciona" bpmnElement="task_seleciona_disciplinas">
+        <dc:Bounds x="940" y="165" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_aceita" bpmnElement="task_aceita_regras">
+        <dc:Bounds x="1170" y="165" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_confirma" bpmnElement="task_confirma_matricula">
+        <dc:Bounds x="1380" y="165" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_envia_selecao" bpmnElement="task_envia_selecao">
+        <dc:Bounds x="1380" y="420" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_periodo" bpmnElement="task_ret_fora_periodo">
+        <dc:Bounds x="750" y="930" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_disc" bpmnElement="task_retorna_disciplinas">
+        <dc:Bounds x="940" y="930" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_busca_disc" bpmnElement="task_busca_disciplinas">
+        <dc:Bounds x="940" y="1020" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_periodo" bpmnElement="gw_periodo" isMarkerVisible="true">
+        <dc:Bounds x="801" y="1026" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="782" y="1084" width="85" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_rec_periodo" bpmnElement="task_recebe_req_periodo">
+        <dc:Bounds x="580" y="1020" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_rec_selecao" bpmnElement="task_recebe_selecao">
+        <dc:Bounds x="1380" y="1050" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_fin" bpmnElement="gw_financeiro" isMarkerVisible="true">
+        <dc:Bounds x="1606" y="1056" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1591.5" y="1114" width="77" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_fin" bpmnElement="task_ret_financeiro">
+        <dc:Bounds x="1555" y="920" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_prereq" bpmnElement="task_ret_prereq">
+        <dc:Bounds x="1745" y="920" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_conflito" bpmnElement="task_ret_conflito">
+        <dc:Bounds x="1925" y="920" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_prereq" bpmnElement="gw_prereq" isMarkerVisible="true">
+        <dc:Bounds x="1796" y="1056" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1786" y="1114" width="68" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_conflito" bpmnElement="gw_conflito" isMarkerVisible="true">
+        <dc:Bounds x="1976" y="1056" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1962" y="1114" width="76" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_cred" bpmnElement="gw_creditos" isMarkerVisible="true">
+        <dc:Bounds x="2156" y="1056" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2136" y="1114" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_cred" bpmnElement="task_ret_creditos">
+        <dc:Bounds x="2105" y="920" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_efetiva" bpmnElement="task_efetiva_matricula">
+        <dc:Bounds x="2290" y="1050" width="160" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_email" bpmnElement="task_envia_email">
+        <dc:Bounds x="2295" y="950" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_ret_conf" bpmnElement="task_retorna_confirmacao">
+        <dc:Bounds x="2295" y="860" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_recebe_resp" bpmnElement="task_recebe_resp">
+        <dc:Bounds x="2295" y="410" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_gw_resultado" bpmnElement="gw_resultado" isMarkerVisible="true">
+        <dc:Bounds x="2476" y="416" width="48" height="48" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2432" y="470" width="65" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_conf" bpmnElement="task_exibe_confirmacao">
+        <dc:Bounds x="2615" y="320" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_sucesso" bpmnElement="end_sucesso">
+        <dc:Bounds x="2837" y="332" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2821" y="374" width="69" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_periodo" bpmnElement="task_exibe_fora_periodo">
+        <dc:Bounds x="2615" y="410" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_periodo" bpmnElement="end_fora_periodo">
+        <dc:Bounds x="2837" y="422" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2816" y="464" width="78" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_fin" bpmnElement="task_exibe_financeiro">
+        <dc:Bounds x="2615" y="500" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_fin" bpmnElement="end_financeiro">
+        <dc:Bounds x="2837" y="512" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2824" y="554" width="62" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_prereq" bpmnElement="task_exibe_prereq">
+        <dc:Bounds x="2615" y="590" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_prereq" bpmnElement="end_prereq">
+        <dc:Bounds x="2837" y="602" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2813" y="644" width="84" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_conflito" bpmnElement="task_exibe_conflito">
+        <dc:Bounds x="2615" y="680" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_conflito" bpmnElement="end_conflito">
+        <dc:Bounds x="2837" y="692" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2810" y="734" width="90" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_exibe_cred" bpmnElement="task_exibe_creditos">
+        <dc:Bounds x="2615" y="770" width="150" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="sh_end_cred" bpmnElement="end_creditos">
+        <dc:Bounds x="2837" y="782" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2812" y="824" width="87" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="e_start_r" bpmnElement="f_start_renderiza">
+        <di:waypoint x="280" y="213" />
+        <di:waypoint x="280" y="450" />
+        <di:waypoint x="365" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_r_envia" bpmnElement="f_renderiza_envia">
+        <di:waypoint x="515" y="450" />
+        <di:waypoint x="580" y="450" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_envia_b" bpmnElement="f_envia_periodo_backend">
+        <di:waypoint x="655" y="480" />
+        <di:waypoint x="655" y="1020" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_disc_user" bpmnElement="f_exibe_disc_usuario">
+        <di:waypoint x="1015" y="470" />
+        <di:waypoint x="1015" y="225" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_ace_conf" bpmnElement="f_aceita_confirma">
+        <di:waypoint x="1330" y="195" />
+        <di:waypoint x="1380" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_conf_envia" bpmnElement="f_confirma_envia">
+        <di:waypoint x="1455" y="225" />
+        <di:waypoint x="1455" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sel_b" bpmnElement="f_envia_selecao_backend">
+        <di:waypoint x="1455" y="480" />
+        <di:waypoint x="1455" y="1050" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0mxgdg4_di" bpmnElement="Flow_0mxgdg4">
+        <di:waypoint x="825" y="930" />
+        <di:waypoint x="825" y="720" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1y62w99_di" bpmnElement="Flow_1y62w99">
+        <di:waypoint x="1015" y="930" />
+        <di:waypoint x="1015" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ifyor3_di" bpmnElement="Flow_0ifyor3">
+        <di:waypoint x="1100" y="195" />
+        <di:waypoint x="1170" y="195" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0nnndtc_di" bpmnElement="Flow_0nnndtc">
+        <di:waypoint x="1630" y="1056" />
+        <di:waypoint x="1630" y="980" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_sel_fin" bpmnElement="f_selecao_gw_fin">
+        <di:waypoint x="1530" y="1080" />
+        <di:waypoint x="1606" y="1080" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fin_ok" bpmnElement="f_fin_ok">
+        <di:waypoint x="1654" y="1080" />
+        <di:waypoint x="1796" y="1080" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1640" y="922" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_pre_ok" bpmnElement="f_prereq_ok">
+        <di:waypoint x="1844" y="1080" />
+        <di:waypoint x="1976" y="1080" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1780" y="922" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_con_ok" bpmnElement="f_conflito_ok">
+        <di:waypoint x="2024" y="1080" />
+        <di:waypoint x="2156" y="1080" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1920" y="922" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0u36x09_di" bpmnElement="Flow_0u36x09">
+        <di:waypoint x="825" y="1026" />
+        <di:waypoint x="825" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_busca_ret" bpmnElement="f_busca_disc">
+        <di:waypoint x="1015" y="1020" />
+        <di:waypoint x="1015" y="990" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_per_sim" bpmnElement="f_periodo_sim">
+        <di:waypoint x="849" y="1050" />
+        <di:waypoint x="940" y="1050" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="880" y="922" width="30" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_req_gw" bpmnElement="f_req_gw_periodo">
+        <di:waypoint x="730" y="1050" />
+        <di:waypoint x="801" y="1050" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0ep6heu_di" bpmnElement="Flow_0ep6heu">
+        <di:waypoint x="2180" y="1056" />
+        <di:waypoint x="2180" y="980" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0q4goww_di" bpmnElement="Flow_0q4goww">
+        <di:waypoint x="1820" y="1056" />
+        <di:waypoint x="1820" y="980" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1ul4q3k_di" bpmnElement="Flow_1ul4q3k">
+        <di:waypoint x="2000" y="1056" />
+        <di:waypoint x="2000" y="980" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0hnu4im_di" bpmnElement="Flow_0hnu4im">
+        <di:waypoint x="2180" y="920" />
+        <di:waypoint x="2180" y="440" />
+        <di:waypoint x="2295" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1mw55vd_di" bpmnElement="Flow_1mw55vd">
+        <di:waypoint x="2000" y="920" />
+        <di:waypoint x="2000" y="880" />
+        <di:waypoint x="2180" y="880" />
+        <di:waypoint x="2180" y="440" />
+        <di:waypoint x="2295" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0dy5dhx_di" bpmnElement="Flow_0dy5dhx">
+        <di:waypoint x="1820" y="920" />
+        <di:waypoint x="1820" y="880" />
+        <di:waypoint x="2180" y="880" />
+        <di:waypoint x="2180" y="440" />
+        <di:waypoint x="2295" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0iyf9ag_di" bpmnElement="Flow_0iyf9ag">
+        <di:waypoint x="1630" y="920" />
+        <di:waypoint x="1630" y="880" />
+        <di:waypoint x="2180" y="880" />
+        <di:waypoint x="2180" y="440" />
+        <di:waypoint x="2295" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0kodddd_di" bpmnElement="Flow_0kodddd">
+        <di:waypoint x="2204" y="1080" />
+        <di:waypoint x="2290" y="1080" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1r67csq_di" bpmnElement="Flow_1r67csq">
+        <di:waypoint x="2370" y="1050" />
+        <di:waypoint x="2370" y="1010" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_1cvv6dx_di" bpmnElement="Flow_1cvv6dx">
+        <di:waypoint x="2370" y="950" />
+        <di:waypoint x="2370" y="920" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_0px52fq_di" bpmnElement="Flow_0px52fq">
+        <di:waypoint x="2370" y="860" />
+        <di:waypoint x="2370" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_rec_gw" bpmnElement="f_recebe_gw">
+        <di:waypoint x="2445" y="440" />
+        <di:waypoint x="2476" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_res_ok" bpmnElement="f_res_sucesso">
+        <di:waypoint x="2500" y="416" />
+        <di:waypoint x="2500" y="350" />
+        <di:waypoint x="2615" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1880" y="386" width="40" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_res_per" bpmnElement="f_res_periodo">
+        <di:waypoint x="2524" y="440" />
+        <di:waypoint x="2615" y="440" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1896" y="432" width="50" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_res_fin" bpmnElement="f_res_financeiro">
+        <di:waypoint x="2500" y="464" />
+        <di:waypoint x="2500" y="530" />
+        <di:waypoint x="2615" y="530" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1880" y="500" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_res_pre" bpmnElement="f_res_prereq">
+        <di:waypoint x="2500" y="464" />
+        <di:waypoint x="2500" y="620" />
+        <di:waypoint x="2615" y="620" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1880" y="590" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_res_con" bpmnElement="f_res_conflito">
+        <di:waypoint x="2500" y="464" />
+        <di:waypoint x="2500" y="710" />
+        <di:waypoint x="2615" y="710" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1880" y="680" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_res_cred" bpmnElement="f_res_creditos">
+        <di:waypoint x="2500" y="464" />
+        <di:waypoint x="2500" y="800" />
+        <di:waypoint x="2615" y="800" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1880" y="770" width="60" height="14" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_conf_end" bpmnElement="f_conf_end">
+        <di:waypoint x="2765" y="350" />
+        <di:waypoint x="2837" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_per_end" bpmnElement="f_periodo_end">
+        <di:waypoint x="2765" y="440" />
+        <di:waypoint x="2837" y="440" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_fin_end" bpmnElement="f_financeiro_end">
+        <di:waypoint x="2765" y="530" />
+        <di:waypoint x="2837" y="530" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_pre_end" bpmnElement="f_prereq_end">
+        <di:waypoint x="2765" y="620" />
+        <di:waypoint x="2837" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_con_end" bpmnElement="f_conflito_end">
+        <di:waypoint x="2765" y="710" />
+        <di:waypoint x="2837" y="710" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="e_cred_end" bpmnElement="f_creditos_end">
+        <di:waypoint x="2765" y="800" />
+        <di:waypoint x="2837" y="800" />
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
