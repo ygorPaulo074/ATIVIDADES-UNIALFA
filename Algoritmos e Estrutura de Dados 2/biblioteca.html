@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <title>Dados da Biblioteca</title>
+</head>
+<body>
+    <h1>Biblioteca</h1>
+    <p>Visualizacao dos dados gerados para demonstracao.</p>
+    <p id="estado">Carregando biblioteca.json...</p>
+
+    <h2>Resumo</h2>
+    <ul>
+        <li>Livros: <strong id="totalLivros"></strong></li>
+        <li>Clientes: <strong id="totalClientes"></strong></li>
+        <li>Emprestimos: <strong id="totalEmprestimos"></strong></li>
+    </ul>
+
+    <label for="tipo">Dados para analisar:</label>
+    <select id="tipo">
+        <option value="livros">Livros</option>
+        <option value="clientes">Clientes</option>
+        <option value="emprestimos">Emprestimos</option>
+    </select>
+
+    <label for="filtro"> Filtro:</label>
+    <input id="filtro" type="search" placeholder="Digite para filtrar">
+
+    <p id="quantidadeExibida"></p>
+    <table border="1" cellpadding="5">
+        <thead id="cabecalho"></thead>
+        <tbody id="corpo"></tbody>
+    </table>
+
+    <script>
+        let configuracao;
+
+        function atualizarTabela() {
+            const tipo = document.getElementById("tipo").value;
+            const filtro = document.getElementById("filtro").value.toLowerCase();
+            const { dados, colunas } = configuracao[tipo];
+            const filtrados = dados.filter(item =>
+                colunas.some(coluna => String(item[coluna]).toLowerCase().includes(filtro))
+            );
+
+            document.getElementById("cabecalho").innerHTML =
+                `<tr>${colunas.map(coluna => `<th>${coluna}</th>`).join("")}</tr>`;
+
+            document.getElementById("corpo").innerHTML = filtrados.map(item =>
+                `<tr>${colunas.map(coluna => `<td>${item[coluna]}</td>`).join("")}</tr>`
+            ).join("");
+
+            document.getElementById("quantidadeExibida").textContent =
+                `${filtrados.length} item(ns) exibido(s).`;
+        }
+
+        fetch("biblioteca.json")
+            .then(resposta => {
+                if (!resposta.ok) {
+                    throw new Error("Nao foi possivel carregar biblioteca.json");
+                }
+                return resposta.json();
+            })
+            .then(biblioteca => {
+                configuracao = {
+                    livros: {
+                        dados: biblioteca.livros,
+                        colunas: ["id", "titulo", "autor", "categoria", "anoPublicacao"]
+                    },
+                    clientes: {
+                        dados: biblioteca.clientes,
+                        colunas: ["id", "nome", "email", "telefone"]
+                    },
+                    emprestimos: {
+                        dados: biblioteca.emprestimos,
+                        colunas: ["id", "clienteId", "livroId", "dataObtencao", "dataRetorno"]
+                    }
+                };
+
+                document.getElementById("totalLivros").textContent = biblioteca.livros.length;
+                document.getElementById("totalClientes").textContent = biblioteca.clientes.length;
+                document.getElementById("totalEmprestimos").textContent = biblioteca.emprestimos.length;
+                document.getElementById("estado").textContent =
+                    "Dados carregados de biblioteca.json.";
+
+                atualizarTabela();
+            })
+            .catch(erro => {
+                document.getElementById("estado").textContent =
+                    "Nao foi possivel carregar biblioteca.json. Abra este arquivo com o Live Server do VS Code.";
+                document.getElementById("quantidadeExibida").textContent = erro.message;
+            });
+
+        document.getElementById("tipo").addEventListener("change", () => {
+            if (configuracao) {
+                atualizarTabela();
+            }
+        });
+
+        document.getElementById("filtro").addEventListener("input", () => {
+            if (configuracao) {
+                atualizarTabela();
+            }
+        });
+    </script>
+</body>
+</html>
